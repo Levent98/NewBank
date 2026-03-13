@@ -1,0 +1,33 @@
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# --- Eclipse ---
+.settings/
+.project
+.classpath
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# --- Maven / Build ---
+target/
+classes/
+out/
+build/
+dependency-reduced-pom.xml
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs and temporary files ---
+*.log
+*.jar
+*.war
+*.ear
