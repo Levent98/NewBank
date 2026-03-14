@@ -1,0 +1,142 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>newbank</groupId>
+  <artifactId>newbank</artifactId>
+  <version>1</version>
+
+  <properties>
+	  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	  <maven.compiler.release>17</maven.compiler.release>
+	  <jar.plugin.version>3.4.2</jar.plugin.version>
+	  <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
+	  <pmd.plugin.version>3.27.0</pmd.plugin.version>
+	  <spotbugs.plugin.version>4.9.5.0</spotbugs.plugin.version>
+	  <junit.jupiter.version>6.0.0</junit.jupiter.version>
+	  <surefire.plugin.version>3.5.4</surefire.plugin.version>
+  </properties>
+
+  <dependencies>
+	  <dependency>
+		  <groupId>org.junit.jupiter</groupId>
+		  <artifactId>junit-jupiter</artifactId>
+		  <version>${junit.jupiter.version}</version>
+		  <scope>test</scope>
+	  </dependency>
+  </dependencies>
+
+  <build>
+	  <plugins>
+
+		  <plugin> <!-- JAR: build two runnable artifacts -->
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-jar-plugin</artifactId>
+			  <version>${jar.plugin.version}</version>
+			  <executions>
+				  <execution>
+					  <id>server-jar</id>
+					  <goals>
+						  <goal>jar</goal>
+					  </goals>
+					  <configuration>
+						  <classifier>server</classifier>
+						  <archive>
+							  <manifest>
+								  <mainClass>newbank.server.NewBankServer</mainClass>
+							  </manifest>
+						  </archive>
+					  </configuration>
+				  </execution>
+				  <execution>
+					  <id>client-jar</id>
+					  <goals>
+						  <goal>jar</goal>
+					  </goals>
+					  <configuration>
+						  <classifier>client</classifier>
+						  <archive>
+							  <manifest>
+								  <mainClass>newbank.client.ExampleClient</mainClass>
+							  </manifest>
+						  </archive>
+					  </configuration>
+				  </execution>
+			  </executions>
+		  </plugin>
+
+		  <plugin> <!-- CHECKSTYLE -->
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-checkstyle-plugin</artifactId>
+			  <version>${checkstyle.plugin.version}</version>
+			  <configuration>
+				  <configLocation>google_checks.xml</configLocation>
+				  <consoleOutput>true</consoleOutput>
+				  <failOnViolation>false</failOnViolation>
+			  </configuration>
+			  <executions>
+				  <execution>
+					  <id>checkstyle-on-validate</id>
+					  <phase>validate</phase>
+					  <goals>
+						  <goal>check</goal>
+					  </goals>
+				  </execution>
+			  </executions>
+		  </plugin>
+
+		  <plugin> <!-- PMD + CPD -->
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-pmd-plugin</artifactId>
+			  <version>${pmd.plugin.version}</version>
+			  <configuration>
+				  <!-- Show failing rules in the console; tune failure conditions -->
+				  <printFailingErrors>true</printFailingErrors>
+				  <failurePriority>5</failurePriority>          <!-- 1..5; 5 treats all severities as failures -->
+				  <failOnViolation>false</failOnViolation>
+				  <rulesets>
+					  <!-- Use PMD 7 stock categories or your custom ruleset -->
+					  <ruleset>category/java/bestpractices.xml</ruleset>
+					  <ruleset>category/java/errorprone.xml</ruleset>
+					  <ruleset>category/java/codestyle.xml</ruleset>
+				  </rulesets>
+				  <!-- Analyze tests too? set true -->
+				  <includeTests>false</includeTests>
+			  </configuration>
+			  <executions>
+				  <execution>
+					  <id>pmd-and-cpd-validate</id>
+					  <phase>validate</phase>
+					  <goals>
+						  <goal>check</goal>       <!-- fails on PMD violations; runs pmd:pmd first -->
+						  <goal>cpd-check</goal>   <!-- fails on copy/paste -->
+					  </goals>
+				  </execution>
+			  </executions>
+		  </plugin>
+
+		  <plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-surefire-plugin</artifactId>
+			  <version>${surefire.plugin.version}</version>
+			  <configuration>
+				  <!-- Use JUnit Platform (JUnit 5) provider is automatic in modern surefire -->
+			  </configuration>
+		  </plugin>
+
+	  </plugins>
+  </build>
+
+  <reporting>
+	  <plugins>
+		  <plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-checkstyle-plugin</artifactId>
+			  <version>${checkstyle.plugin.version}</version>
+			  <configuration>
+				  <!-- Align with build behavior -->
+				  <!-- <includeTestSourceDirectory>false</includeTestSourceDirectory> -->
+			  </configuration>
+		  </plugin>
+	  </plugins>
+  </reporting>
+
+</project>

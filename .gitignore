@@ -16,6 +16,7 @@ tmp/
 *.swp
 
 # --- Maven / Build ---
+.mvn/
 target/
 classes/
 out/
