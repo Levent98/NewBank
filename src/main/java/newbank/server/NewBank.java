@@ -40,8 +40,25 @@ public class NewBank {
   // commands from the NewBank customer are processed in this method
   public synchronized String processRequest(CustomerID customer, String request) {
     if(customers.containsKey(customer.getKey())) {
-      switch(request) {
+
+      // Find the first space
+      int firstSpace = request.indexOf(" ");
+
+      // Extract command
+      String command = (firstSpace == -1)
+        ? request
+        : request.substring(0, firstSpace);
+
+      // Extract argument (account name)
+      String argument = (firstSpace == -1)
+        ? null
+        : request.substring(firstSpace + 1).trim();
+
+      switch(command) {
       case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
+      
+
+      case "NEWACCOUNT": return handleNewAccount(customer,argument);
       default : return "FAIL";
       }
     }
@@ -51,5 +68,24 @@ public class NewBank {
   private String showMyAccounts(CustomerID customer) {
     return (customers.get(customer.getKey())).accountsToString();
   }
+  private String handleNewAccount(CustomerID customer, String accountName) {
+    if (accountName == null || accountName.isEmpty()) {
+      return "You must specify an account name.";
+    }
+
+    return newAccount(customer, accountName);
+  }
+
+  private String newAccount(CustomerID customerID, String accountName) {
+    Customer c = customers.get(customerID.getKey());
+
+    boolean success = c.addAccount(accountName);
+
+    return success
+        ? "SUCCESS - a new account '" + accountName + "' has been created."
+        : "FAIL - an error occured.";
+  }
+
+
 
 }
