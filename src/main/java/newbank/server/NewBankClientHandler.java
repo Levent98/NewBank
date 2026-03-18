@@ -20,43 +20,78 @@ public class NewBankClientHandler extends Thread {
   }
   
   @Override
-  public void run() {
-    // keep getting requests from the client and processing them
+public void run() {
+
+    CustomerID customer = null;
+
     try {
-      // ask for user name
-      out.println("Enter Username");
-      String userName = in.readLine();
-      // ask for password
-      out.println("Enter Password");
-      String password = in.readLine();
-      out.println("Checking Details...");
-      // authenticate user and get customer ID token from bank for use in subsequent requests
-      CustomerID customer = bank.checkLogInDetails(userName, password);
-      // if the user is authenticated then get requests from the user and process them 
-      if(customer != null) {
-        out.println("Log In Successful. What do you want to do?");
-        while(true) {
-          String request = in.readLine();
-          System.out.println("Request from " + customer.getKey());
-          String responce = bank.processRequest(customer, request);
-          out.println(responce);
+
+        while (true) {
+
+            // read request from client
+            String request = in.readLine();
+
+            if (request == null) {
+                break; // client disconnected
+            }
+
+            String response;
+
+            // --- LOGIN ---
+            if (request.startsWith("LOGIN")) {
+
+                String[] parts = request.split(" ");
+
+                if (parts.length < 3) {
+                    response = "FAIL";
+                } else {
+
+                    String username = parts[1];
+                    String password = parts[2];
+
+                    customer = bank.checkLogInDetails(username, password);
+
+                    if (customer != null) {
+                        System.out.println("User Login: " + username);
+                        response = "SUCCESS";
+                    } else {
+                        System.out.println("Failed user login: " + username);
+                        response = "FAIL";
+                    }
+                }
+            }
+
+            // --- LOGOUT ---
+            else if (request.equalsIgnoreCase("LOGOUT")) {
+
+                customer = null;
+                response = "LOGGED OUT";
+            }
+
+            // --- OTHER COMMANDS ---
+            else {
+
+                if (customer == null) {
+                    response = "Please login first";
+                } else {
+                    response = bank.processRequest(customer, request);
+                }
+            }
+
+            // send response back to client
+            out.println(response);
         }
-      }
-      else {
-        out.println("Log In Failed");
-      }
+
     } catch (IOException e) {
-      e.printStackTrace();
+        System.out.println("Client disconnected");
+    } finally {
+        try {
+            in.close();
+            out.close();
+        } catch (IOException e) {
+            Thread.currentThread().interrupt();
+        }
     }
-    finally {
-      try {
-        in.close();
-        out.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-        Thread.currentThread().interrupt();
-      }
-    }
-  }
+}
 
 }

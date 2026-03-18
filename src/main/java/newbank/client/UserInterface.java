@@ -33,10 +33,10 @@ public class UserInterface {
              // UI case 1
                 try {
                     //ask for username
-                    System.out.println("Please Enter Username ");
+                    System.out.println("Enter Username ");
                     username =  userInput.readLine();
                     //ask for password
-                    System.out.println("Please Enter Password ");
+                    System.out.println("Enter Password ");
                     password = userInput.readLine();
 
                     //check login bool
@@ -49,23 +49,25 @@ public class UserInterface {
                     String response = client.readResponse(); 
                         if ("SUCCESS" .equals(response)) {
                             isLoggedIn = true;
-                            System.out.println("Login Scuccessful");
+                            System.out.println("Login Scuccessful\n");
                         } else {
-                            System.out.println("Login Failed");
+                            System.out.println("Login Failed - Incorrect username or password\n");
                         }
 
                 } catch (IOException e) {
-                    System.out.println("An error has occured, please restart program");
+                    System.out.println("An error has occured, please restart program\n");
                 }    
             } else {
              // UI case 2 Menu display
                 try {
 
 
-                    System.out.print("Welcome to NewBank, this service is controlled via command line.\n");
-                    System.out.print("Please select from the following commands and type in the terminal window:\n");
+                    System.out.print("Welcome to NewBank,\n");
+                    System.out.print("This service is controlled via command line.\n");
+                    System.out.print("Please type a command in the terminal window.\n");
                     
                    
+                    System.out.println("\nMenu Options:");
                     System.out.println("\nSHOWMYACCOUNTS");
                     System.out.println("NEWACCOUNT <name>");
                     System.out.println("MOVE <amount> <from> <to>");
@@ -73,23 +75,9 @@ public class UserInterface {
                     System.out.println("LOGOUT");
                     System.out.println("EXIT");
 
-                    System.out.print("Enter command: ");
+                    System.out.print("\nEnter command: ");
+                    System.out.print("");
                     String userCommand = userInput.readLine();
-
-                    // EXIT program
-                    if (userCommand.equalsIgnoreCase("EXIT")) {
-                        System.out.println("Closing NewBank");
-                        client.close();
-                        break;
-                    }
-
-                    // LOGOUT
-                    if (userCommand.equalsIgnoreCase("LOGOUT")) {
-                        client.sendCommand("LOGOUT");
-                        isLoggedIn = false;
-                        System.out.println("Logged out");
-                        continue;
-                    }
 
                     // send user command to server
                     client.sendCommand(userCommand);
