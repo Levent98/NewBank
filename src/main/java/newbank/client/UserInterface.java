@@ -43,7 +43,6 @@ public class UserInterface {
 
                     //check login bool
                     if(client == null) {
-                        
                         client = new ExampleClient("localhost" ,14002); // creates ExmapleCLient object for establishing server conection
                     }
 
@@ -53,6 +52,8 @@ public class UserInterface {
                         if ("SUCCESS" .equals(response)) {
                             isLoggedIn = true;
                             System.out.println("Login Successful\n");
+                            showMenu();
+                        
                         } else {
                             System.out.println("Login Failed - Incorrect username or password\n");
                         }
@@ -63,26 +64,23 @@ public class UserInterface {
             } else {
              // UI case 2 Menu display
                 try {
-
-
-                    System.out.print("Welcome to NewBank,\n");
-                    System.out.print("This service is controlled via command line.\n");
-                    System.out.print("Please type a command in the terminal window.\n");
-                    
-                   
-                    System.out.println("\nMenu Options:");
-                    System.out.println("\nSHOWMYACCOUNTS");
-                    System.out.println("NEWACCOUNT <name>");
-                    System.out.println("MOVE <amount> <from> <to>");
-                    System.out.println("PAY <person> <amount>");
-                    System.out.println("LOGOUT");
-                    System.out.println("EXIT");
-
-                    System.out.print("\nEnter command: ");
-                    System.out.print("");
                     String userCommand = userInput.readLine();
 
-                    // Log out locally (needs client side server connection cut + server side cancellation of customerID)
+                        // Handle Input user commands //
+
+                    // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
+                    if ("EXIT".equals(userCommand)){
+                        System.out.println("Exiting NewBank");
+                        client.close();
+                        break; // stop
+                    }
+                    // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
+                    if ("LOGOUT".equals(userCommand)){
+                        client.sendCommand("LOUGOUT");
+                        isLoggedIn = false;
+                        System.out.println("Logged out\n");
+                        continue; // back to login
+                    }
 
                     // send user command to server
                     client.sendCommand(userCommand);
@@ -97,6 +95,25 @@ public class UserInterface {
             }
         }    
     }
+
+    private void showMenu(){
+        System.out.print("Welcome to NewBank,\n");
+        System.out.print("This service is controlled via command line.\n");
+        System.out.print("Please type a command in the terminal window.\n");
+                    
+                   
+        System.out.println("\nMenu Options:");
+        System.out.println("\nSHOWMYACCOUNTS");
+        System.out.println("NEWACCOUNT <name>");
+        System.out.println("MOVE <amount> <from> <to>");
+        System.out.println("PAY <person> <amount>");
+        System.out.println("LOGOUT");
+        System.out.println("EXIT");
+
+        System.out.print("\nEnter command: ");
+        System.out.print("");
+    }
+    
 }  
   
   

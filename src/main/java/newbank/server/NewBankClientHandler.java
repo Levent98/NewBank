@@ -40,13 +40,13 @@ public void run() {
 
             String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
 
-            // LOGIN
+            // LOGIN // Pass to authentication?
             if (request.startsWith("LOGIN")) {
 
                 String[] parts = request.split(" ");
 
                 if (parts.length < 3) {
-                    response = "FAIL";
+                    response = "FAIL"; // at UI login entry both username and password should be entered 
                 } else {
 
                     String username = parts[1];
@@ -66,7 +66,6 @@ public void run() {
 
             // LOGOUT
             else if (request.equalsIgnoreCase("LOGOUT")) {
-
                 customer = null;
                 response = "LOGGED OUT";
             }

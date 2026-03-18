@@ -5,32 +5,35 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class ExampleClient {
 
-    // fields
     private Socket server;
-    private PrintWriter serverOut;
+    private PrintWriter bankServerOut;
     private BufferedReader serverIn;
 
-    // constructor
-    public ExampleClient(String ip, int port) throws IOException {
+    public ExampleClient(String ip, int port) throws UnknownHostException, IOException {
         server = new Socket(ip, port);
-        serverOut = new PrintWriter(server.getOutputStream(), true);
+        bankServerOut = new PrintWriter(server.getOutputStream(), true);
         serverIn = new BufferedReader(new InputStreamReader(server.getInputStream()));
     }
 
-    // method sends command to server
     public void sendCommand(String command) {
-        serverOut.println(command);
+        bankServerOut.println(command);
     }
 
-    // method reads response from server
     public String readResponse() throws IOException {
-        return serverIn.readLine();
+        String response = serverIn.readLine();
+
+        if (response == null) {
+            throw new IOException("Server disconnected");
+        }
+
+        return response;
     }
 
-    // stop connection case method
+    // close server connection
     public void close() throws IOException {
         server.close();
     }
