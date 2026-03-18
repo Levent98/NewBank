@@ -79,6 +79,8 @@ public class UserInterface {
                     System.out.print("");
                     String userCommand = userInput.readLine();
 
+                    // Log out locally (needs client side server connection cut + server side cancellation of customerID)
+
                     // send user command to server
                     client.sendCommand(userCommand);
 
