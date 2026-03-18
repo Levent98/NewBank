@@ -27,7 +27,7 @@ public class Customer {
       if (a.getName().equalsIgnoreCase(name)) {
         return false;
       }
-      if (accounts.size() >=10) {
+      if (accounts.size()>10) {
         return false;
       }
     }

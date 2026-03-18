@@ -7,7 +7,7 @@ public class NewBank {
   private static final NewBank bank = new NewBank();
   private HashMap<String,Customer> customers;
   
-  private NewBank() {
+  public NewBank() {
     customers = new HashMap<>();
     addTestData();
   }
