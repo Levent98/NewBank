@@ -10,7 +10,7 @@ public class UserInterface {
     private boolean isLoggedIn = false;
     private String username;
     private String password;
-    private BufferedReader unserInput;
+    private BufferedReader userInput;
     
     // constructor
     public UserInterface(){
@@ -28,15 +28,15 @@ public class UserInterface {
         System.out.println("Welcome to NewBank");
 
         while (true) {
-            if (isLoggedIn = false){
+            if (isLoggedIn == false){
              // UI case 1
                 try {
                     //ask for username
                     System.out.println("Enter Username: ");
-                    username =  userInput.readline();
+                    username =  userInput.readLine();
                     //ask for password
-                    System,out.println("Enter Password: ");
-                    password = userInput.readline();
+                    System.out.println("Enter Password: ");
+                    password = userInput.readLine();
 
                     // TEMPORARY LOGIN (no server yet)
                     if (username != null && password != null) {
@@ -50,7 +50,7 @@ public class UserInterface {
                     System.out.println("An input handling error has occured, please restart program");
                 }
             }
-        }
+        
             else {
              // UI case 2 Menu display
              System.out.println("""
@@ -70,10 +70,10 @@ public class UserInterface {
                 """);
             }
         }
-}
+    }
+}  
   
-  
-  /*
+  /* 
   start program boolean logged in defval = false
   if loggedIn=false{
   System.out.print(
@@ -113,4 +113,4 @@ public class UserInterface {
       are you sure you wsnt to (single loop case EXIT) {terminate socket, close program, clear terminal}
    
 
-}
+*/
