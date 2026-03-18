@@ -24,14 +24,50 @@ public class UserInterface {
   
     // UI case 1 / 2 logic method
     public void start() {
+
         System.out.println("Welcome to NewBank");
 
         while (true) {
             if (isLoggedIn = false){
              // UI case 1
+                try {
+                    //ask for username
+                    System.out.println("Enter Username: ");
+                    username =  userInput.readline();
+                    //ask for password
+                    System,out.println("Enter Password: ");
+                    password = userInput.readline();
+
+                    // TEMPORARY LOGIN (no server yet)
+                    if (username != null && password != null) {
+                        isLoggedIn = true;
+                        System.out.println("Login successful");
+                    } else {
+                        System.out.println("Login failed");
+                    }
+
+                } catch (IOException e) {
+                    System.out.println("An input handling error has occured, please restart program");
+                }
             }
+        }
             else {
-             // UI case 2
+             // UI case 2 Menu display
+             System.out.println("""
+
+                Welcome to New Bank, this service is controlled via command line using the following commands typed to the terminal window:
+
+                SHOWMYACCOUNTS
+
+                NEWACCOUNT<Name>
+
+                MOVE<Amount><From><To>
+
+                PAY<Person><Amount>
+
+                LOGOUT
+
+                """);
             }
         }
 }
