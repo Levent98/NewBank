@@ -42,4 +42,9 @@ public class PasswordManager {
     return passwordManager;
   }
 
+  // Could store the parameters to be more explicit in inputPassword & actualPassword
+  public boolean check(String userName, String password) {
+    return password.equals(passwords.get(userName));
+  }
+
 }
