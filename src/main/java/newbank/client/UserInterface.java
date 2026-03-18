@@ -11,6 +11,7 @@ public class UserInterface {
     private String username;
     private String password;
     private BufferedReader userInput;
+    private ExampleClient client;
     
     // constructor
     public UserInterface(){
@@ -32,85 +33,77 @@ public class UserInterface {
              // UI case 1
                 try {
                     //ask for username
-                    System.out.println("Enter Username: ");
+                    System.out.println("Please Enter Username ");
                     username =  userInput.readLine();
                     //ask for password
-                    System.out.println("Enter Password: ");
+                    System.out.println("Please Enter Password ");
                     password = userInput.readLine();
 
-                    // TEMPORARY LOGIN (no server yet)
-                    if (username != null && password != null) {
-                        isLoggedIn = true;
-                        System.out.println("Login successful");
-                    } else {
-                        System.out.println("Login failed");
+                    //check login bool
+                    if(client == null) {
+                        client = new ExampleClient("localhost" ,14002);
                     }
 
+                    // Send login 
+                    client.sendCommand("LOGIN " + username + " " + password);
+                    String response = client.readResponse(); 
+                        if ("SUCCESS" .equals(response)) {
+                            isLoggedIn = true;
+                            System.out.println("Login Scuccessful");
+                        } else {
+                            System.out.println("Login Failed");
+                        }
+
                 } catch (IOException e) {
-                    System.out.println("An input handling error has occured, please restart program");
+                    System.out.println("An error has occured, please restart program");
+                }    
+            } else {
+             // UI case 2 Menu display
+                try {
+
+
+                    System.out.print("Welcome to NewBank, this service is controlled via command line.\n");
+                    System.out.print("Please select from the following commands and type in the terminal window:\n");
+                    
+                   
+                    System.out.println("\nSHOWMYACCOUNTS");
+                    System.out.println("NEWACCOUNT <name>");
+                    System.out.println("MOVE <amount> <from> <to>");
+                    System.out.println("PAY <person> <amount>");
+                    System.out.println("LOGOUT");
+                    System.out.println("EXIT");
+
+                    System.out.print("Enter command: ");
+                    String userCommand = userInput.readLine();
+
+                    // EXIT program
+                    if (userCommand.equalsIgnoreCase("EXIT")) {
+                        System.out.println("Closing NewBank");
+                        client.close();
+                        break;
+                    }
+
+                    // LOGOUT
+                    if (userCommand.equalsIgnoreCase("LOGOUT")) {
+                        client.sendCommand("LOGOUT");
+                        isLoggedIn = false;
+                        System.out.println("Logged out");
+                        continue;
+                    }
+
+                    // send user command to server
+                    client.sendCommand(userCommand);
+
+                    // read and display response from server
+                    String response = client.readResponse();
+                    System.out.println("Server: " + response);
+
+                } catch (IOException e) {
+                    System.out.println("Error communicating with server");
                 }
             }
-        
-            else {
-             // UI case 2 Menu display
-             System.out.println("""
-
-                Welcome to New Bank, this service is controlled via command line using the following commands typed to the terminal window:
-
-                SHOWMYACCOUNTS
-
-                NEWACCOUNT<Name>
-
-                MOVE<Amount><From><To>
-
-                PAY<Person><Amount>
-
-                LOGOUT
-
-                """);
-            }
-        }
+        }    
     }
 }  
   
-  /* 
-  start program boolean logged in defval = false
-  if loggedIn=false{
-  System.out.print(
-  "welcome message 
-  enter username")
   
-  user enter username
-   store username in variable
-   
-  "enter password"
-  
-  user enter password
-    
-  start client
-   send(username, password) via client to server
- }
-   
-  else if client recieves authentication success comf 
-   
-   switch boolean logged in to true
-   
-   display
-   "login successfull 
-   
-   show msg + menu options"
-   
-   user input menu choice command
-    switch 
-     case SHOWMYACCOUNTS{send to client handler}
-     case MOVEMONEY {send to client handler}
-     case PAYMONEY {send to client handler}
-     case CREATEACCOUNT {send to client handler}
-     case SHOWACCOUNTDETAILS {send to client handler}
-     case LOGOUT {return to start msg Case 1}
-     
-     case EXIT 
-      are you sure you wsnt to (single loop case EXIT) {terminate socket, close program, clear terminal}
-   
-
-*/
