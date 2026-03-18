@@ -1,3 +1,5 @@
+// UI class handles user input and display messages back to terminal.
+
 package newbank.client;
 
 import java.io.BufferedReader;
@@ -17,13 +19,13 @@ public class UserInterface {
     public UserInterface(){
         userInput = new BufferedReader(new InputStreamReader(System.in)); 
     }
-    // program start
+    // CLient side program start
      public static void main(String[] args){
         UserInterface ui = new UserInterface();
         ui.start();
     }
   
-    // UI case 1 / 2 logic method
+    // UI case 1 Or 2 logic method
     public void start() {
 
         System.out.println("Welcome to NewBank");
@@ -41,15 +43,16 @@ public class UserInterface {
 
                     //check login bool
                     if(client == null) {
-                        client = new ExampleClient("localhost" ,14002);
+                        
+                        client = new ExampleClient("localhost" ,14002); // creates ExmapleCLient object for establishing server conection
                     }
 
-                    // Send login 
-                    client.sendCommand("LOGIN " + username + " " + password);
+                    
+                    client.sendCommand("LOGIN " + username + " " + password); // sends login details with login keyword
                     String response = client.readResponse(); 
                         if ("SUCCESS" .equals(response)) {
                             isLoggedIn = true;
-                            System.out.println("Login Scuccessful\n");
+                            System.out.println("Login Successful\n");
                         } else {
                             System.out.println("Login Failed - Incorrect username or password\n");
                         }

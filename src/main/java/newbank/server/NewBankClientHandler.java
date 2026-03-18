@@ -1,3 +1,6 @@
+// once client server interaction has established socket between clietnhandler and client this class is used to handle I/o via send/response commands with ExampleClient.
+// Inofrmation arriving here can be taken out for business logic (NewBank) etc to handle banking operations.
+
 package newbank.server;
 
 import java.io.BufferedReader;
@@ -35,9 +38,9 @@ public void run() {
                 break; // client disconnected
             }
 
-            String response;
+            String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
 
-            // --- LOGIN ---
+            // LOGIN
             if (request.startsWith("LOGIN")) {
 
                 String[] parts = request.split(" ");
@@ -61,14 +64,14 @@ public void run() {
                 }
             }
 
-            // --- LOGOUT ---
+            // LOGOUT
             else if (request.equalsIgnoreCase("LOGOUT")) {
 
                 customer = null;
                 response = "LOGGED OUT";
             }
 
-            // --- OTHER COMMANDS ---
+            // OTHER COMMANDS
             else {
 
                 if (customer == null) {
