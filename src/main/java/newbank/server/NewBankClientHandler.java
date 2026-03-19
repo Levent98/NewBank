@@ -15,11 +15,17 @@ public class NewBankClientHandler extends Thread {
   private NewBank bank;
   private BufferedReader in;
   private PrintWriter out;
+  private final int PASSWORD_LENGTH = 14;
   
   public NewBankClientHandler(Socket s) throws IOException {
     bank = NewBank.getBank();
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
     out = new PrintWriter(s.getOutputStream(), true);
+  }
+
+  // US01 simple password strength as per user story, could be improved upon
+  private boolean isStrongPassword(String password) {
+    return password != null && password.length() >= PASSWORD_LENGTH;
   }
   
   @Override
