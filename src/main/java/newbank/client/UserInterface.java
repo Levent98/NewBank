@@ -8,14 +8,13 @@ import java.io.InputStreamReader;
 
 public class UserInterface {
 
-    // fields
     private boolean isLoggedIn = false;
     private String username;
     private String password;
     private BufferedReader userInput;
     private ExampleClient client;
     
-    // constructor
+    // constructor starts wrapped input stream
     public UserInterface(){
         userInput = new BufferedReader(new InputStreamReader(System.in)); 
     }
@@ -32,7 +31,7 @@ public class UserInterface {
 
         while (true) {
             if (isLoggedIn == false){
-             // UI case 1
+             // UI case 1 pre login
                 try {
                     //ask for username
                     System.out.println("Enter Username ");
@@ -52,6 +51,7 @@ public class UserInterface {
                         if ("SUCCESS" .equals(response)) {
                             isLoggedIn = true;
                             System.out.println("Login Successful\n");
+                            // display command menu
                             showMenu();
                         
                         } else {
@@ -62,7 +62,7 @@ public class UserInterface {
                     System.out.println("An error has occured, please restart program\n");
                 }    
             } else {
-             // UI case 2 Menu display
+             // UI case 2 post login 
                 try {
                     String userCommand = userInput.readLine();
 
@@ -95,7 +95,7 @@ public class UserInterface {
             }
         }    
     }
-
+// menu display method
     private void showMenu(){
         System.out.print("Welcome to NewBank,\n");
         System.out.print("This service is controlled via command line.\n");
@@ -110,6 +110,7 @@ public class UserInterface {
         System.out.println("LOGOUT");
         System.out.println("EXIT");
 
+       
         System.out.print("\nEnter command: ");
         System.out.print("");
     }

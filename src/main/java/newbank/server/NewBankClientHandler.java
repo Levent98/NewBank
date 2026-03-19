@@ -15,7 +15,6 @@ public class NewBankClientHandler extends Thread {
   private BufferedReader in;
   private PrintWriter out;
   
-  
   public NewBankClientHandler(Socket s) throws IOException {
     bank = NewBank.getBank();
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -23,37 +22,28 @@ public class NewBankClientHandler extends Thread {
   }
   
   @Override
-public void run() {
+    public void run() {
+        CustomerID customer = null;
+        try {
+            while (true) {
+                // read request from client
+                String request = in.readLine();
+                if (request == null) {
+                    break; // client disconnected
+                }
+                String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
 
-    CustomerID customer = null;
+                ///////// LOGIN // Pass to authentication?
+                if (request.startsWith("LOGIN")) {
+                    String[] parts = request.split(" ");
+                    if (parts.length < 3) {
+                        response = "FAIL"; // at UI login entry both username and password should be entered 
+                    } else {
+                        String username = parts[1];
+                        String password = parts[2];
 
-    try {
-
-        while (true) {
-
-            // read request from client
-            String request = in.readLine();
-
-            if (request == null) {
-                break; // client disconnected
-            }
-
-            String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
-
-            // LOGIN // Pass to authentication?
-            if (request.startsWith("LOGIN")) {
-
-                String[] parts = request.split(" ");
-
-                if (parts.length < 3) {
-                    response = "FAIL"; // at UI login entry both username and password should be entered 
-                } else {
-
-                    String username = parts[1];
-                    String password = parts[2];
-
+                    /////// edit / replace with bank.login/password method?
                     customer = bank.checkLogInDetails(username, password);
-
                     if (customer != null) {
                         System.out.println("User Login: " + username);
                         response = "SUCCESS";
@@ -62,24 +52,23 @@ public void run() {
                         response = "FAIL";
                     }
                 }
+
             }
 
-            // LOGOUT
-            else if (request.equalsIgnoreCase("LOGOUT")) {
+            ///////// LOGOUT also pass to newbank to end session?
+            else if (request.equals("LOGOUT")) {
                 customer = null;
                 response = "LOGGED OUT";
             }
-
-            // OTHER COMMANDS
+           
+            // Other commands passed to NewBank with customer name identifier
             else {
-
                 if (customer == null) {
                     response = "Please login first";
                 } else {
                     response = bank.processRequest(customer, request);
                 }
-            }
-
+            }   
             // send response back to client
             out.println(response);
         }
