@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class NewBankTest {
 
   @Test
-    void newAccountShouldAppearInShowMyAccounts() {
+    void addAccount_NewValidAccount_IsVisibleInList() {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Bhagy");
 
@@ -23,7 +23,7 @@ public class NewBankTest {
     }
 
   @Test
-    void shouldConfirmNewAccountCreation() {
+    void processRequest_AccountCreated_ReturnsMessage() {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Bhagy");
 
@@ -34,7 +34,7 @@ public class NewBankTest {
     }
 
   @Test
-    void shouldNotifyUserOfAccountCreationError() {
+    void processRequest_DuplicateAccount_ReturnsFail() {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Bhagy");
 
@@ -49,12 +49,12 @@ public class NewBankTest {
     }
 
   @Test
-    void shouldNotAllowMoreThanTenAccounts() {
+    void processRequest_MaximumTenAccounts_ReturnsFail() {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Christina");
 
       // Create 10 accounts
-      for (int i = 1; i <= 10; i++) {
+      for (int i = 1; i < 11; i++) {
         String result = bank.processRequest(customer, "NEWACCOUNT Acc" + i);
           assertTrue(result.startsWith("SUCCESS"),
                   "Account " + i + " should be created successfully.");
