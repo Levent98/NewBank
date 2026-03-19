@@ -105,7 +105,6 @@ public class UserInterface {
 
        
         System.out.print("\nEnter command: ");
-        System.out.print("");
     }
     
 }  
