@@ -67,12 +67,6 @@ public class UserInterface {
 
                         // Handle Input user commands //
 
-                    // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
-                    if ("EXIT".equals(userCommand)){
-                        System.out.println("Exiting NewBank");
-                        client.close();
-                        break; // stop
-                    }
                     // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
                     if ("LOGOUT".equals(userCommand)){
                         client.sendCommand("LOUGOUT");
