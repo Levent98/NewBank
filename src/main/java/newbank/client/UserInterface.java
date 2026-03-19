@@ -40,9 +40,8 @@ public class UserInterface {
                     System.out.println("Enter Password ");
                     password = userInput.readLine();
 
-                    //check login bool
                     if(client == null) {
-                        client = new ExampleClient("localhost" ,14002); // creates ExmapleCLient object for establishing server conection
+                        client = new ExampleClient("localhost" ,14002); // ExampleCLient object establishes server conection
                     }
 
                     
@@ -87,7 +86,7 @@ public class UserInterface {
 
                     // read and display response from server
                     String response = client.readResponse();
-                    System.out.println("Server: " + response);
+                    System.out.println("NewBank: " + response);
 
                 } catch (IOException e) {
                     System.out.println("Error communicating with server");

@@ -51,7 +51,7 @@ public class NewBank {
     if(customers.containsKey(customer.getKey())) {
       switch(request) {
       case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
-      default : return "FAIL";
+      default : return "Command not recognised.";
       }
     }
     return "FAIL";

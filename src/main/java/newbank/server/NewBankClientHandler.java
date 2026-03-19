@@ -33,7 +33,7 @@ public class NewBankClientHandler extends Thread {
                 }
                 String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
 
-                ///////// LOGIN // Pass to authentication?
+                ///////// Login with keyword to distinuish from menu command 
                 if (request.startsWith("LOGIN")) {
                     String[] parts = request.split(" ");
                     if (parts.length < 3) {
@@ -42,7 +42,7 @@ public class NewBankClientHandler extends Thread {
                         String username = parts[1];
                         String password = parts[2];
 
-                    /////// edit / replace with bank.login/password method?
+                    // Authentication via newbank > PasswordManager, bank terminal out + user terminal response
                     customer = bank.checkLogInDetails(username, password);
                     if (customer != null) {
                         System.out.println("User Login: " + username);
@@ -52,10 +52,9 @@ public class NewBankClientHandler extends Thread {
                         response = "FAIL";
                     }
                 }
-
             }
 
-            ///////// LOGOUT also pass to newbank to end session?
+            // Log out handling, customer session end + logout repsonse
             else if (request.equals("LOGOUT")) {
                 customer = null;
                 response = "LOGGED OUT";
