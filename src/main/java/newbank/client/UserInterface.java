@@ -14,15 +14,11 @@ public class UserInterface {
     private BufferedReader userInput;
     private ExampleClient client;
     
-    // constructor starts wrapped input stream
+    // constructor starts wrapped input stream form user
     public UserInterface(){
         userInput = new BufferedReader(new InputStreamReader(System.in)); 
     }
-    // CLient side program start
-     public static void main(String[] args){
-        UserInterface ui = new UserInterface();
-        ui.start();
-    }
+   
   
     // UI case 1 Or 2 logic method
     public void start() {
@@ -99,12 +95,9 @@ public class UserInterface {
         System.out.println("\nSHOWMYACCOUNTS");
         System.out.println("NEWACCOUNT <name>");
         System.out.println("MOVE <amount> <from> <to>");
-        System.out.println("PAY <person> <amount>");
-        System.out.println("LOGOUT");
-        System.out.println("EXIT");
-
-       
-        System.out.print("\nEnter command: ");
+        System.out.println("LOGOUT");  
+        System.out.println("");     
+        System.out.print("Enter command:\n");
     }
     
 }  
