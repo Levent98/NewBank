@@ -26,23 +26,23 @@ public class NewBankClientHandler extends Thread {
         CustomerID customer = null;
         try {
             while (true) {
-                // read request from client
+                // reads request from client
                 String request = in.readLine();
                 if (request == null) {
-                    break; // client disconnected
+                    break; 
                 }
-                String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
+                String response; // response used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
 
-                ///////// Login with keyword to distinuish from menu command 
+                // Login with keyword to distinuish from menu command
                 if (request.startsWith("LOGIN")) {
                     String[] parts = request.split(" ");
                     if (parts.length < 3) {
-                        response = "FAIL"; // at UI login entry both username and password should be entered 
+                        response = "FAIL"; 
                     } else {
                         String username = parts[1];
                         String password = parts[2];
 
-                    // Authentication via newbank > PasswordManager, bank terminal out + user terminal response
+                    // Authentication via newbank 
                     customer = bank.checkLogInDetails(username, password);
                     if (customer != null) {
                         System.out.println("User Login: " + username);
@@ -54,7 +54,7 @@ public class NewBankClientHandler extends Thread {
                 }
             }
 
-            // Log out handling, customer session end + logout repsonse
+            // Log out handling, customer session end + logout repsonse to UI
             else if (request.equals("LOGOUT")) {
                 customer = null;
                 response = "LOGGED OUT";
@@ -68,7 +68,7 @@ public class NewBankClientHandler extends Thread {
                     response = bank.processRequest(customer, request);
                 }
             }   
-            // send response back to client
+            // send response to bank terminal
             out.println(response);
         }
 

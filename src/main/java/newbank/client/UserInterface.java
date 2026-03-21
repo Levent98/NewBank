@@ -99,7 +99,9 @@ public class UserInterface {
         System.out.println("");     
         System.out.print("Enter command:\n");
     }
-    
-}  
-  
+  public static void main(String[] args){
+        UserInterface ui = new UserInterface();
+        ui.start();  
+    }  
+}
   

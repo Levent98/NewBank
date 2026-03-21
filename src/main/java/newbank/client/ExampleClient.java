@@ -16,7 +16,7 @@ public class ExampleClient {
     public ExampleClient(String ip, int port) throws UnknownHostException, IOException {
         server = new Socket(ip, port);
         bankServerOut = new PrintWriter(server.getOutputStream(), true);
-        serverIn = new BufferedReader(new InputStreamReader(server.getInputStream()));
+        serverIn = new BufferedReader(new InputStreamReader(server.getInputStream()));   
     }
 
     public void sendCommand(String command) {
@@ -29,7 +29,6 @@ public class ExampleClient {
         if (response == null) {
             throw new IOException("Server disconnected");
         }
-
         return response;
     }
 
