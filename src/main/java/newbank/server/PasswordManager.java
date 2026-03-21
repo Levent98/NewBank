@@ -29,6 +29,7 @@ public class PasswordManager {
 
   private PasswordManager() {
     passwords = new HashMap<>();
+    // This prepopulates the in-memory hash table with some values and can be disabled later
     addTestData();
   }
 
@@ -49,7 +50,11 @@ public class PasswordManager {
   }
 
   public boolean check(String userName, String userProvidedPassword) {
+    if (!hasUserName(userName)) {
+      return false;
+    }
     String hashFromDB = passwords.get(userName);
+    // a null value indicates a locker user
     if (hashFromDB == null) {
       return false;
     }
@@ -58,17 +63,38 @@ public class PasswordManager {
 
   // checking if the user is authenticated before changing the password is the job of the caller
   public String set(String userName, String userProvidedPassword) {
-    if (userName == null || userProvidedPassword == null) {
-      return "Error: the username and/or password is empty";
+    if (userName == null) {
+      return "Error: the username is empty";
+    } else if (userProvidedPassword == null) {
+      passwords.put(userName, null);
+      return "Created locked account";
     }
 
     Hash userHash = Password.hash(userProvidedPassword).addRandomSalt(SALT).with(ARGON2ID);
-    String hashFromDB = passwords.get(userName);
     // put() returns null if there was no previous such key
     if (passwords.put(userName, userHash.getResult()) == null) {
       return "Username and password created";
     } else {
       return "Password changed";
+    }
+  }
+
+  public boolean hasUserName(String userName) {
+    if (userName == null) {
+      return false;
+    }
+    return passwords.containsKey(userName);
+  }
+
+  public void delUserName(String userName) {
+    if (hasUserName(userName)) {
+      passwords.remove(userName);
+    }
+  }
+
+  public void lockUserName(String userName) {
+    if (hasUserName(userName)) {
+      passwords.put(userName, null);
     }
   }
 
