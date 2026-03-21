@@ -9,16 +9,10 @@ public class Account {
     this.accountName = accountName;
     this.openingBalance = openingBalance;
   }
-
-  public String getName() {
-    return accountName;
-  }
-
   
   @Override
   public String toString() {
     return (accountName + ": " + openingBalance);
   }
-
 
 }
