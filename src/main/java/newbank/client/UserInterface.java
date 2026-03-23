@@ -36,42 +36,45 @@ public class UserInterface {
                     password = userInput.readLine();
 
                     //start new client connection
-                    if(client == null) {
+                    try {
                         client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
+                    } catch (IOException e) {
+                        System.out.println("Error: Unable to establish NewBank server connection - please try again");
+                        continue;
                     }
 
-                    
-                    client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
-                    String response = client.readResponse(); 
+                    try {
+                        client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
+                        String response = client.readResponse(); 
+                            
                         if ("SUCCESS" .equals(response)) {
-                            isLoggedIn = true;
-                            System.out.println("Login Successful\n");
-                            // display command menu
-                            showMenu();
-                        
-                        } else {
-                            System.out.println("Login Failed - Incorrect username or password\n");
-                        }
+                                isLoggedIn = true;
+                                System.out.println("Login Successful\n");
+                                showMenu(); // display command menu
+                            } else {
+                                System.out.println("Login Failed - Incorrect username or password\n");
+                            }
+                    } catch (IOException e) {
+                        System.out.println("Error: Server connection lost");
+                        client = null; // reset client
+                    }
 
                 } catch (IOException e) {
                     System.out.println("An error has occured, please restart program\n");
                 }    
             } else {
-             // UI case 2 Post login 
+             // UI case 2 Post login command handling
                 try {
                     String userCommand = userInput.readLine();
-
-                        // Handle Input user commands //
 
                     // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
                     if ("EXIT".equals(userCommand)){
                         System.out.println("Thanks for using NewBank");
-
                         if(client != null) {
                             client.sendCommand("LOGOUT");
+                            client.readResponse();
                             client.close();
                         }
-                        client.close();
                         break; // stop
                     }
                     // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
@@ -113,8 +116,7 @@ public class UserInterface {
         System.out.print("\nEnter command: ");
         System.out.print("");
     }
-
-    // CLient side program start
+      // CLient side program start
      public static void main(String[] args){
         UserInterface ui = new UserInterface();
         ui.start();
