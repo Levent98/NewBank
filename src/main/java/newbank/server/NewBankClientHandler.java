@@ -1,5 +1,6 @@
 // once client server interaction has established socket between clietnhandler and client this class is used to handle I/o via send/response commands with ExampleClient.
-// Inofrmation arriving here can be taken out for business logic (NewBank) etc to handle banking operations.
+// Information arriving here can be taken out for business logic (NewBank) etc to handle banking operations.
+// Return responses can either act as keyword trigger logic in UI or simple dsiplay the reponse back to the user terminal.
 
 package newbank.server;
 
@@ -29,34 +30,37 @@ public class NewBankClientHandler extends Thread {
                 // read request from client
                 String request = in.readLine();
                 if (request == null) {
-                    break; // client disconnected
+                    break;
                 }
-                String response; // response is used for pairing in UI to handle UI case 1 or 2 (either login or menu UI presentation)
+                String response; // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
 
-                ///////// LOGIN // Pass to authentication?
+                // Login with keyword to distinuish UI state from menu command
                 if (request.startsWith("LOGIN")) {
                     String[] parts = request.split(" ");
                     if (parts.length < 3) {
-                        response = "FAIL"; // at UI login entry both username and password should be entered 
+                        response = "FAIL"; // at UI login entry both username and password should be entered to satisfy requirements (keyword LOGIN counts as  1 part here)
                     } else {
                         String username = parts[1];
                         String password = parts[2];
 
-                    /////// edit / replace with bank.login/password method?
+                    // Authentication via NewBank method
                     customer = bank.checkLogInDetails(username, password);
                     if (customer != null) {
-                        System.out.println("User Login: " + username);
-                        response = "SUCCESS";
+                        System.out.println("User Login: " + username); // prints to bank side terminal
+                        response = "SUCCESS"; // reponse to UI switches it to logged in state
                     } else {
-                        System.out.println("Failed user login: " + username);
-                        response = "FAIL";
+                        System.out.println("Failed user login: " + username); // prints to bank side temrinal
+                        response = "FAIL"; // response to UI
                     }
                 }
 
             }
 
-            ///////// LOGOUT also pass to newbank to end session?
+            // Log out handling, upon logout bank temrinal notified, customer session ends, then logout repsonse sent to UI (cannot cause crash if LOGOUT attempted while no customer in event of client/server error)
             else if (request.equals("LOGOUT")) {
+                if (customer != null) {
+                    System.out.println("User Logout: " + customer.getKey());
+                }
                 customer = null;
                 response = "LOGGED OUT";
             }
@@ -69,7 +73,7 @@ public class NewBankClientHandler extends Thread {
                     response = bank.processRequest(customer, request);
                 }
             }   
-            // send response back to client
+            // send response back to bank temrinal
             out.println(response);
         }
 

@@ -30,7 +30,7 @@ public class ExampleClient {
             throw new IOException("Server disconnected");
         }
 
-        return response;
+        return response.trim();
     }
 
     // close server connection

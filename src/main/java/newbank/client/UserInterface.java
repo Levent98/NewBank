@@ -18,12 +18,7 @@ public class UserInterface {
     public UserInterface(){
         userInput = new BufferedReader(new InputStreamReader(System.in)); 
     }
-    // CLient side program start
-     public static void main(String[] args){
-        UserInterface ui = new UserInterface();
-        ui.start();
-    }
-  
+    
     // UI case 1 Or 2 logic method
     public void start() {
 
@@ -31,7 +26,7 @@ public class UserInterface {
 
         while (true) {
             if (isLoggedIn == false){
-             // UI case 1 pre login
+             // UI case 1 Pre login
                 try {
                     //ask for username
                     System.out.println("Enter Username ");
@@ -40,13 +35,13 @@ public class UserInterface {
                     System.out.println("Enter Password ");
                     password = userInput.readLine();
 
-                    //check login bool
+                    //start new client connection
                     if(client == null) {
-                        client = new ExampleClient("localhost" ,14002); // creates ExmapleCLient object for establishing server conection
+                        client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
                     }
 
                     
-                    client.sendCommand("LOGIN " + username + " " + password); // sends login details with login keyword
+                    client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
                     String response = client.readResponse(); 
                         if ("SUCCESS" .equals(response)) {
                             isLoggedIn = true;
@@ -62,7 +57,7 @@ public class UserInterface {
                     System.out.println("An error has occured, please restart program\n");
                 }    
             } else {
-             // UI case 2 post login 
+             // UI case 2 Post login 
                 try {
                     String userCommand = userInput.readLine();
 
@@ -70,15 +65,21 @@ public class UserInterface {
 
                     // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
                     if ("EXIT".equals(userCommand)){
-                        System.out.println("Exiting NewBank");
+                        System.out.println("Thanks for using NewBank");
+
+                        if(client != null) {
+                            client.sendCommand("LOGOUT");
+                            client.close();
+                        }
                         client.close();
                         break; // stop
                     }
                     // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
                     if ("LOGOUT".equals(userCommand)){
-                        client.sendCommand("LOUGOUT");
+                        client.sendCommand("LOGOUT");
+                        String response = client.readResponse();
+                        System.out.println(response);
                         isLoggedIn = false;
-                        System.out.println("Logged out\n");
                         continue; // back to login
                     }
 
@@ -87,7 +88,7 @@ public class UserInterface {
 
                     // read and display response from server
                     String response = client.readResponse();
-                    System.out.println("Server: " + response);
+                    System.out.println("NewBank: " + response);
 
                 } catch (IOException e) {
                     System.out.println("Error communicating with server");
@@ -100,8 +101,7 @@ public class UserInterface {
         System.out.print("Welcome to NewBank,\n");
         System.out.print("This service is controlled via command line.\n");
         System.out.print("Please type a command in the terminal window.\n");
-                    
-                   
+                      
         System.out.println("\nMenu Options:");
         System.out.println("\nSHOWMYACCOUNTS");
         System.out.println("NEWACCOUNT <name>");
@@ -110,11 +110,15 @@ public class UserInterface {
         System.out.println("LOGOUT");
         System.out.println("EXIT");
 
-       
         System.out.print("\nEnter command: ");
         System.out.print("");
     }
-    
+
+    // CLient side program start
+     public static void main(String[] args){
+        UserInterface ui = new UserInterface();
+        ui.start();
+    } 
 }  
   
   
