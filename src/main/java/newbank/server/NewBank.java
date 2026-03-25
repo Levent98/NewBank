@@ -39,10 +39,11 @@ public class NewBank {
 
   // commands from the NewBank customer are processed in this method
   public synchronized String processRequest(CustomerID customer, String request) {
-    if(customers.containsKey(customer.getKey())) {
+    //protect customer ID stauts against customer = null in client handler
+    if(customer != null && customers.containsKey(customer.getKey())) {
       switch(request) {
       case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
-      default : return "FAIL";
+      default : return "Command not recognised.";
       }
     }
     return "FAIL";

@@ -1,3 +1,7 @@
+// once client server interaction has established socket between clietnhandler and client this class is used to handle I/o via send/response commands with ExampleClient.
+// Information arriving here can be taken out for business logic (NewBank) etc to handle banking operations.
+// Return responses can either act as keyword trigger logic in UI or simple dsiplay the reponse back to the user terminal.
+
 package newbank.server;
 
 import java.io.BufferedReader;
@@ -12,7 +16,6 @@ public class NewBankClientHandler extends Thread {
   private BufferedReader in;
   private PrintWriter out;
   
-  
   public NewBankClientHandler(Socket s) throws IOException {
     bank = NewBank.getBank();
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -20,43 +23,70 @@ public class NewBankClientHandler extends Thread {
   }
   
   @Override
-  public void run() {
-    // keep getting requests from the client and processing them
-    try {
-      // ask for user name
-      out.println("Enter Username");
-      String userName = in.readLine();
-      // ask for password
-      out.println("Enter Password");
-      String password = in.readLine();
-      out.println("Checking Details...");
-      // authenticate user and get customer ID token from bank for use in subsequent requests
-      CustomerID customer = bank.checkLogInDetails(userName, password);
-      // if the user is authenticated then get requests from the user and process them 
-      if(customer != null) {
-        out.println("Log In Successful. What do you want to do?");
-        while(true) {
-          String request = in.readLine();
-          System.out.println("Request from " + customer.getKey());
-          String responce = bank.processRequest(customer, request);
-          out.println(responce);
+    public void run() {
+        CustomerID customer = null;
+        try {
+            while (true) {
+                // read request from client
+                String request = in.readLine();
+                if (request == null) {
+                    break;
+                }
+                String response; // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
+
+                // Login with keyword to distinuish UI state from menu command
+                if (request.startsWith("LOGIN")) {
+                    String[] parts = request.split(" ");
+                    if (parts.length < 3) {
+                        response = "FAIL"; // at UI login entry both username and password should be entered to satisfy requirements (keyword LOGIN counts as  1 part here)
+                    } else {
+                        String username = parts[1];
+                        String password = parts[2];
+
+                    // Authentication via NewBank method
+                    customer = bank.checkLogInDetails(username, password);
+                    if (customer != null) {
+                        System.out.println("User Login: " + username); // prints to bank side terminal
+                        response = "SUCCESS"; // reponse to UI switches it to logged in state
+                    } else {
+                        System.out.println("Failed user login: " + username); // prints to bank side temrinal
+                        response = "FAIL"; // response to UI
+                    }
+                }
+
+            }
+
+            // Log out handling, upon logout bank temrinal notified, customer session ends, then logout repsonse sent to UI (cannot cause crash if LOGOUT attempted while no customer in event of client/server error)
+            else if (request.equals("LOGOUT")) {
+                if (customer != null) {
+                    System.out.println("User Logout: " + customer.getKey());
+                }
+                customer = null;
+                response = "LOGGED OUT";
+            }
+           
+            // Other commands passed to NewBank with customer name identifier
+            else {
+                if (customer == null) {
+                    response = "Please login first";
+                } else {
+                    response = bank.processRequest(customer, request);
+                }
+            }   
+            // send response back to bank temrinal
+            out.println(response);
         }
-      }
-      else {
-        out.println("Log In Failed");
-      }
+
     } catch (IOException e) {
-      e.printStackTrace();
+        System.out.println("Client disconnected");
+    } finally {
+        try {
+            in.close();
+            out.close();
+        } catch (IOException e) {
+            Thread.currentThread().interrupt();
+        }
     }
-    finally {
-      try {
-        in.close();
-        out.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-        Thread.currentThread().interrupt();
-      }
-    }
-  }
+}
 
 }
