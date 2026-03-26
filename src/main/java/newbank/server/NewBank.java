@@ -7,7 +7,7 @@ public class NewBank {
   private static final NewBank bank = new NewBank();
   private HashMap<String,Customer> customers;
   
-  private NewBank() {
+  public NewBank() {
     customers = new HashMap<>();
     addTestData();
   }
@@ -40,8 +40,24 @@ public class NewBank {
   // commands from the NewBank customer are processed in this method
   public synchronized String processRequest(CustomerID customer, String request) {
     if(customers.containsKey(customer.getKey())) {
-      switch(request) {
+
+      // Find the first space as expects user to type in "NEWACCOUNT ACCOUNTNAME"
+      int firstSpace = request.indexOf(" ");
+
+      // Extract command
+      String command = (firstSpace == -1)
+        ? request
+        : request.substring(0, firstSpace);
+
+      // Extract argument (account name)
+      String argument = (firstSpace == -1)
+        ? null
+        : request.substring(firstSpace + 1).trim();
+
+      // CLI action based on user input - this is where we could add further commands
+      switch(command) {
       case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
+      case "NEWACCOUNT": return handleNewAccount(customer,argument);
       default : return "FAIL";
       }
     }
@@ -51,5 +67,21 @@ public class NewBank {
   private String showMyAccounts(CustomerID customer) {
     return (customers.get(customer.getKey())).accountsToString();
   }
+  // If there is no account name given by the user after NEWACCOUNT the program returns the message
+  private String handleNewAccount(CustomerID customer, String accountName) {
+    if (accountName == null || accountName.isEmpty()) {
+      return "You must specify an account name.";
+    }
+    return newAccount(customer, accountName);
+  }
+  // Confirms account has been made or if account has not been made.  Fail only happens now if >10 accounts created
+  private String newAccount(CustomerID customerID, String accountName) {
+    Customer c = customers.get(customerID.getKey());
 
+    boolean success = c.addAccount(accountName);
+
+    return success
+        ? "SUCCESS - a new account '" + accountName + "' has been created."
+        : "FAIL - an error occured.";
+  }
 }
