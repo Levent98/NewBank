@@ -8,119 +8,128 @@ import java.io.InputStreamReader;
 
 public class UserInterface {
 
-    private boolean isLoggedIn = false;
-    private String username;
-    private String password;
-    private BufferedReader userInput;
-    private ExampleClient client;
-    
-    // constructor starts wrapped input stream
-    public UserInterface(){
-        userInput = new BufferedReader(new InputStreamReader(System.in)); 
-    }
-    
-    // UI case 1 Or 2 logic method
-    public void start() {
+  private boolean isLoggedIn = false;
+  private String username;
+  private String password;
+  private BufferedReader userInput;
+  private ExampleClient client;
 
-        System.out.println("Welcome to NewBank");
+  // constructor starts wrapped input stream
+  public UserInterface(){
+    userInput = new BufferedReader(new InputStreamReader(System.in)); 
+  }
 
-        while (true) {
-            if (isLoggedIn == false){
-             // UI case 1 Pre login
-                try {
-                    //ask for username
-                    System.out.println("Enter Username ");
-                    username =  userInput.readLine();
-                    //ask for password
-                    System.out.println("Enter Password ");
-                    password = userInput.readLine();
+  // UI case 1 Or 2 logic method
+  public void start() {
 
-                    //start new client connection
-                    try {
-                        client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
-                    } catch (IOException e) {
-                        System.out.println("Error: Unable to establish NewBank server connection - please try again");
-                        continue;
-                    }
+    System.out.println("Welcome to NewBank");
 
-                    try {
-                        client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
-                        String response = client.readResponse(); 
-                            
-                        if ("SUCCESS" .equals(response)) {
-                                isLoggedIn = true;
-                                System.out.println("Login Successful\n");
-                                showMenu(); // display command menu
-                            } else {
-                                System.out.println("Login Failed - Incorrect username or password\n");
-                            }
-                    } catch (IOException e) {
-                        System.out.println("Error: Server connection lost");
-                        client = null; // reset client
-                    }
+    while (true) {
+      if (isLoggedIn == false){
+        // UI case 1 Pre login
+        try {
+          //ask for username
+          System.out.println("Enter Username ");
+          username =  userInput.readLine();
+          //ask for password
+          System.out.println("Enter Password ");
+          password = userInput.readLine();
 
-                } catch (IOException e) {
-                    System.out.println("An error has occured, please restart program\n");
-                }    
+          //start new client connection
+          try {
+            client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
+          } catch (IOException e) {
+            System.out.println("Error: Unable to establish NewBank server connection - please try again");
+            continue;
+          }
+
+          try {
+            client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
+            String response = client.readResponse(); 
+
+            if ("SUCCESS" .equals(response)) {
+              isLoggedIn = true;
+              System.out.println("Login Successful\n");
+              showMenu(); // display command menu
             } else {
-             // UI case 2 Post login command handling
-                try {
-                    String userCommand = userInput.readLine();
-
-                    // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
-                    if ("EXIT".equals(userCommand)){
-                        System.out.println("Thanks for using NewBank");
-                        if(client != null) {
-                            client.sendCommand("LOGOUT");
-                            client.readResponse();
-                            client.close();
-                        }
-                        break; // stop
-                    }
-                    // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
-                    if ("LOGOUT".equals(userCommand)){
-                        client.sendCommand("LOGOUT");
-                        String response = client.readResponse();
-                        System.out.println(response);
-                        isLoggedIn = false;
-                        continue; // back to login
-                    }
-
-                    // send user command to server
-                    client.sendCommand(userCommand);
-
-                    // read and display response from server
-                    String response = client.readResponse();
-                    System.out.println("NewBank: " + response);
-
-                } catch (IOException e) {
-                    System.out.println("Error communicating with server");
-                }
+              System.out.println("Login Failed - Incorrect username or password\n");
             }
-        }    
-    }
-// menu display method
-    private void showMenu(){
-        System.out.print("Welcome to NewBank,\n");
-        System.out.print("This service is controlled via command line.\n");
-        System.out.print("Please type a command in the terminal window.\n");
-                      
-        System.out.println("\nMenu Options:");
-        System.out.println("\nSHOWMYACCOUNTS");
-        System.out.println("NEWACCOUNT <name>");
-        System.out.println("MOVE <amount> <from> <to>");
-        System.out.println("PAY <person> <amount>");
-        System.out.println("LOGOUT");
-        System.out.println("EXIT");
+          } catch (IOException e) {
+            System.out.println("Error: Server connection lost");
+            client = null; // reset client
+          }
 
-        System.out.print("\nEnter command: ");
-        System.out.print("");
-    }
-      // CLient side program start
-     public static void main(String[] args){
-        UserInterface ui = new UserInterface();
-        ui.start();
-    } 
+        } catch (IOException e) {
+          System.out.println("An error has occured, please restart program\n");
+        }    
+      } else {
+        // UI case 2 Post login command handling
+        try {
+          String userCommand = userInput.readLine();
+
+          // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
+          if ("EXIT".equals(userCommand)){
+            System.out.println("Thanks for using NewBank");
+            if(client != null) {
+              client.sendCommand("LOGOUT");
+              client.readResponse();
+              client.close();
+            }
+            break; // stop
+          }
+          // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
+          if ("LOGOUT".equals(userCommand)){
+            client.sendCommand("LOGOUT");
+            String response = client.readResponse();
+            System.out.println(response);
+            isLoggedIn = false;
+            continue; // back to login
+          }
+
+          if ("CHANGEPW".equals(userCommand)){
+            //ask for password
+            System.out.println("Enter new password ");
+            password = userInput.readLine();
+            client.sendCommand("CHANGEPW " + password);
+            // read new command
+            userCommand = userInput.readLine();
+          }
+
+          // send user command to server
+          client.sendCommand(userCommand);
+
+          // read and display response from server
+          String response = client.readResponse();
+          System.out.println("NewBank: " + response);
+
+        } catch (IOException e) {
+          System.out.println("Error communicating with server");
+        }
+      }
+    }    
+  }
+  // menu display method
+  private void showMenu(){
+    System.out.print("Welcome to NewBank,\n");
+    System.out.print("This service is controlled via command line.\n");
+    System.out.print("Please type a command in the terminal window.\n");
+
+    System.out.println("\nMenu Options:");
+    System.out.println("\nSHOWMYACCOUNTS");
+    System.out.println("NEWACCOUNT <name>");
+    System.out.println("MOVE <amount> <from> <to>");
+    System.out.println("PAY <person> <amount>");
+    System.out.println("LOGOUT");
+    System.out.println("EXIT");
+
+    System.out.print("\nEnter command: ");
+    System.out.print("");
+  }
+  // CLient side program start
+  public static void main(String[] args){
+    UserInterface ui = new UserInterface();
+    ui.start();
+  } 
 }  
-  
-  
+
+

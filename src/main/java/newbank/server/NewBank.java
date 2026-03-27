@@ -46,6 +46,13 @@ public class NewBank {
     return null;
   }
 
+  public String changeLogInPassword(String userName, String password) {
+    if(!customers.containsKey(userName) || password == null) {
+      return "FAIL";
+    }
+    return passwords.set(userName, password);
+  }
+
   // US01 simple account creation following addTestData() after checking for account already in use
   public synchronized CustomerID setLogInDetails(String userName, String password) {
     if (userName == null || customers.containsKey(userName)) {
@@ -64,6 +71,7 @@ public class NewBank {
     if(customer != null && customers.containsKey(customer.getKey())) {
       switch(request) {
       case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
+      //case "CHANGEPW" : return setPassword(customers.getKey(), password);
       default : return "Command not recognised.";
       }
     }

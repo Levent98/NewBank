@@ -11,88 +11,85 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class NewBankClientHandler extends Thread {
-  
+
   private NewBank bank;
   private BufferedReader in;
   private PrintWriter out;
-  private final int PASSWORD_LENGTH = 14;
-  
+
   public NewBankClientHandler(Socket s) throws IOException {
     bank = NewBank.getBank();
     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
     out = new PrintWriter(s.getOutputStream(), true);
   }
 
-  // US01 simple password strength as per user story, could be improved upon
-  private boolean isStrongPassword(String password) {
-    return password != null && password.length() >= PASSWORD_LENGTH;
-  }
-  
   @Override
-    public void run() {
-        CustomerID customer = null;
-        try {
-            while (true) {
-                // read request from client
-                String request = in.readLine();
-                if (request == null) {
-                    break;
-                }
-                String response; // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
-
-                // Login with keyword to distinuish UI state from menu command
-                if (request.startsWith("LOGIN")) {
-                    String[] parts = request.split(" ");
-                    if (parts.length < 3) {
-                        response = "FAIL"; // at UI login entry both username and password should be entered to satisfy requirements (keyword LOGIN counts as  1 part here)
-                    } else {
-                        String username = parts[1];
-                        String password = parts[2];
-
-                    // Authentication via NewBank method
-                    customer = bank.checkLogInDetails(username, password);
-                    if (customer != null) {
-                        System.out.println("User Login: " + username); // prints to bank side terminal
-                        response = "SUCCESS"; // reponse to UI switches it to logged in state
-                    } else {
-                        System.out.println("Failed user login: " + username); // prints to bank side temrinal
-                        response = "FAIL"; // response to UI
-                    }
-                }
-
-            }
-
-            // Log out handling, upon logout bank temrinal notified, customer session ends, then logout repsonse sent to UI (cannot cause crash if LOGOUT attempted while no customer in event of client/server error)
-            else if (request.equals("LOGOUT")) {
-                if (customer != null) {
-                    System.out.println("User Logout: " + customer.getKey());
-                }
-                customer = null;
-                response = "LOGGED OUT";
-            }
-           
-            // Other commands passed to NewBank with customer name identifier
-            else {
-                if (customer == null) {
-                    response = "Please login first";
-                } else {
-                    response = bank.processRequest(customer, request);
-                }
-            }   
-            // send response back to bank temrinal
-            out.println(response);
+  public void run() {
+    CustomerID customer = null;
+    try {
+      while (true) {
+        // read request from client
+        String request = in.readLine();
+        if (request == null) {
+          break;
         }
+        String response; // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
+
+        // Login with keyword to distinuish UI state from menu command
+        if (request.startsWith("LOGIN")) {
+          String[] parts = request.split(" ");
+          if (parts.length < 3) {
+            response = "FAIL"; // at UI login entry both username and password should be entered to satisfy requirements (keyword LOGIN counts as 1 part here)
+          } else {
+            String username = parts[1];
+            String password = parts[2];
+
+            // Authentication via NewBank method
+            customer = bank.checkLogInDetails(username, password);
+            if (customer != null) {
+              System.out.println("User Login: " + username); // prints to bank side terminal
+              response = "SUCCESS"; // reponse to UI switches it to logged in state
+            } else {
+              System.out.println("Failed user login: " + username); // prints to bank side temrinal
+              response = "FAIL"; // response to UI
+            }
+          }
+        } else if (request.startsWith("CHANGEPW")) {
+          String[] parts = request.split(" ");
+          response = "FAIL";
+          if (parts.length == 2) {
+            response = bank.changeLogInPassword(customer.getKey(), parts[1]);
+          }
+        } else if (request.equals("LOGOUT")) {
+          // Log out handling, upon logout bank terminal notified, customer session ends, then logout repsonse sent to UI (cannot cause crash if LOGOUT attempted while no customer in event of client/server error)
+          if (customer != null) {
+            System.out.println("User Logout: " + customer.getKey());
+          }
+          customer = null;
+          response = "LOGGED OUT";
+        }
+
+        // Other commands passed to NewBank with customer name identifier
+        else {
+          if (customer == null) {
+            response = "Please login first";
+          } else {
+            response = bank.processRequest(customer, request);
+          }
+        }   
+        // send response back to bank terminal
+        out.println(response);
+      }
 
     } catch (IOException e) {
-        System.out.println("Client disconnected");
+      System.out.println("Client disconnected");
     } finally {
-        try {
-            in.close();
-            out.close();
-        } catch (IOException e) {
-            Thread.currentThread().interrupt();
-        }
+      try {
+        in.close();
+        out.close();
+      } catch (IOException e) {
+        Thread.currentThread().interrupt();
+      }
     }
-}
+  }
 
 }

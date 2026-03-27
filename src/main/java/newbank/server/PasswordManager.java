@@ -20,6 +20,9 @@ public class PasswordManager {
   // for use with addRandomSalt
   private static final int SALT = 16;
 
+  // password constants
+  private static final int PASSWORD_LENGTH = 14;
+
   private static final Argon2Function ARGON2ID =
     Argon2Function.getInstance(MEMORY_KIB, ITERATIONS, PARALLELISATION, OUTPUT_LENGTH, Argon2.ID, VERSION);
 
@@ -45,6 +48,12 @@ public class PasswordManager {
     passwords.put("John", johnHash.getResult());
   }
 
+  // US01 simple password strength as per user story, could be improved upon
+  // This could be used outside of this class if needs be
+  public static boolean isPasswordStrong(String password) {
+    return password != null && password.length() >= PASSWORD_LENGTH;
+  }
+
   public static PasswordManager getPasswordManager() {
     return passwordManager;
   }
@@ -64,18 +73,23 @@ public class PasswordManager {
   // checking if the user is authenticated before changing the password is the job of the caller
   public String set(String userName, String userProvidedPassword) {
     if (userName == null) {
-      return "Error: the username is empty";
-    } else if (userProvidedPassword == null) {
+      return "ERROR: Please provide username and password";
+    }
+    if (userProvidedPassword == null) {
       passwords.put(userName, null);
-      return "Created locked account";
+      return "SUCCESS: Created a locked account";
+    }
+    // TODO: could add a isForced boolean to skip this test
+    if (!isPasswordStrong(userProvidedPassword)) {
+      return "ERROR: The password must be 14+ characters";
     }
 
     Hash userHash = Password.hash(userProvidedPassword).addRandomSalt(SALT).with(ARGON2ID);
     // put() returns null if there was no previous such key
     if (passwords.put(userName, userHash.getResult()) == null) {
-      return "Username and password created";
+      return "SUCCESS: Username and password created";
     } else {
-      return "Password changed";
+      return "SUCCESS: Password changed";
     }
   }
 
@@ -86,16 +100,20 @@ public class PasswordManager {
     return passwords.containsKey(userName);
   }
 
-  public void delUserName(String userName) {
-    if (hasUserName(userName)) {
-      passwords.remove(userName);
+  public boolean delUserName(String userName) {
+    if (!hasUserName(userName)) {
+      return false;
     }
+    passwords.remove(userName);
+    return true;
   }
 
-  public void lockUserName(String userName) {
-    if (hasUserName(userName)) {
-      passwords.put(userName, null);
+  public boolean lockUserName(String userName) {
+    if (!hasUserName(userName)) {
+      return false;
     }
+    passwords.put(userName, null);
+    return true;
   }
 
 }

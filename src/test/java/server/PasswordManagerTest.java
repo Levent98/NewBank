@@ -20,7 +20,7 @@ public class PasswordManagerTest {
   void testCheckPassword() {
     passwords = PasswordManager.getPasswordManager();
     String username = "alice";
-    String password = "secret123";
+    String password = "secret123456789";
 
     passwords.set(username, password);
 
@@ -35,8 +35,8 @@ public class PasswordManagerTest {
   void testChangePassword() {
     passwords = PasswordManager.getPasswordManager();
     String username = "alice";
-    String password1 = "secret123";
-    String password2 = "secret456";
+    String password1 = "secret123456789";
+    String password2 = "secret456789123";
 
     passwords.set(username, password1);
 
@@ -52,7 +52,7 @@ public class PasswordManagerTest {
   void testLockUser() {
     passwords = PasswordManager.getPasswordManager();
     String username = "alice";
-    String password = "secret123";
+    String password = "secret123456789";
 
     // All tests should be self contained, need to re populate the table
     passwords.set(username, password);
@@ -70,7 +70,7 @@ public class PasswordManagerTest {
   void testDelUser() {
     passwords = PasswordManager.getPasswordManager();
     String username = "alice";
-    String password = "secret123";
+    String password = "secret123456789";
 
     // All tests should be self contained, need to re populate the table
     passwords.set(username, password);
@@ -88,7 +88,7 @@ public class PasswordManagerTest {
   void hasUserName() {
     passwords = PasswordManager.getPasswordManager();
     String username1 = "alice";
-    String password1 = "secret123";
+    String password1 = "secret123456789";
     String username2 = "john";
 
     // All tests should be self contained, need to re populate the table
