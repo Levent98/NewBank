@@ -1,5 +1,7 @@
 package newbank;
 
+import newbank.server.CustomerID;
+import newbank.server.TransactionManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.StringTokenizer;
@@ -16,7 +18,7 @@ class TransactionManagerTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request1);
         });
-        assertEquals("Incorrect command", exception.getMessage());
+        assertEquals("ERROR: Incorrect command", exception.getMessage());
     }
 
     // Testing exception thrown when trying to move money from/to an account that doesn't exist
@@ -27,19 +29,19 @@ class TransactionManagerTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request1);
         });
-        assertEquals("No Account exists for specified CustomerID and Account Name", exception.getMessage());
+        assertEquals("ERROR: The account \"Not an Account\" does not exist", exception.getMessage());
 
         String request2 = "MOVE 200 \"Not an Account\" Holiday";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request2);
         });
-        assertEquals("No Account exists for specified CustomerID and Account Name", exception.getMessage());
+        assertEquals("ERROR: The account \"Not an Account\" does not exist", exception.getMessage());
 
         String request3 = "MOVE 200 \"NotanAccount\" \"Not an Account\"";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request3);
         });
-        assertEquals("No Account exists for specified CustomerID and Account Name", exception.getMessage());
+        assertEquals("ERROR: The account \"NotanAccount\" does not exist", exception.getMessage());
     }
 
     // Testing exception thrown when request is not long enough
@@ -54,31 +56,31 @@ class TransactionManagerTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request1);
         });
-        assertEquals("MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
+        assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request2 = "MOVE 200";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request2);
         });
-        assertEquals("MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
+        assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request3 = "MOVE 200 ACCOUNT1";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request3);
         });
-        assertEquals("MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
+        assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request4 = "MOVE 200 ACCOUNT1 ACCOUNT2 ACCOUNT3";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request4);
         });
-        assertEquals("MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
+        assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request5 = "MOVE 200 \"ACCOUNT1 ACCOUNT2\"";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request5);
         });
-        assertEquals("MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
+        assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
     }
 
     // Testing exception thrown when request has incorrect monetary value format
@@ -90,14 +92,14 @@ class TransactionManagerTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request1);
         });
-        assertEquals("Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
+        assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
 
 
         String request2 = "MOVE .222 ACCOUNT1 ACCOUNT2";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request2);
         });
-        assertEquals("Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
+        assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
     }
 
     // Testing exception when request has missing quotes
@@ -108,14 +110,14 @@ class TransactionManagerTest {
         Exception exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request1);
         });
-        assertEquals("An account starting with a '\"' must end with a '\"'", exception.getMessage());
+        assertEquals("ERROR: An account starting with a '\"' must end with a '\"'", exception.getMessage());
 
 
         String request2 = "MOVE 200 Holiday \"Not an Account";
         exception = assertThrows(Exception.class, () -> {
             new TransactionManager(customerID, request2);
         });
-        assertEquals("An account starting with a '\"' must end with a '\"'", exception.getMessage());
+        assertEquals("ERROR: An account starting with a '\"' must end with a '\"'", exception.getMessage());
     }
 
     @Test

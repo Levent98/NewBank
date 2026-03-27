@@ -16,10 +16,10 @@ public class AccountDAO {
         try{
             accountTransactions = data.getTransactions(customerID.getKey(), accountName);
         } catch (Exception e){
-            throw new Exception("No Account exists for specified CustomerID and Account Name");
+            throw new Exception("ERROR: The account \"" + accountName + "\" does not exist");
         }
         if(accountTransactions==null){
-            throw new Exception("No Account exists for specified CustomerID and Account Name");
+            throw new Exception("ERROR: The account \"" + accountName + "\" does not exist");
         }
     }
 
@@ -31,7 +31,5 @@ public class AccountDAO {
     public void addTransaction(Transaction transaction){
         accountTransactions.add(transaction);
         // When it comes to the database we will need to throw an exception if the addition was not possible.
-
-
     }
 }

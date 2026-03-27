@@ -68,7 +68,7 @@ public class Account {
     // add transaction to database
     accountDAO.addTransaction(transaction);
 
-    return "Successful";
+    return "SUCCESS";
   }
 
   /**
@@ -94,7 +94,7 @@ public class Account {
     // add transaction to database
     accountDAO.addTransaction(transaction);
 
-    return "Successful";
+    return "SUCCESS";
   }
 
   public float getBalance(){

@@ -21,7 +21,7 @@ public class TransactionManager {
             checkPayCommand();
         }
         else{
-            throw new Exception("Incorrect command");
+            throw new Exception("ERROR: Incorrect command");
         }
     }
 
@@ -33,33 +33,34 @@ public class TransactionManager {
         // Skip the string MOVE
         st.nextToken();
 
+        String formatErrorMessage = "ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"";
         // Check that the numeric VALUE is in the correct format
         if (!st.hasMoreTokens()) {
-            throw new Exception("MOVE command must be in the format \"MOVE VALUE FROM TO\"");
+            throw new Exception(formatErrorMessage);
         }
         String token = st.nextToken();
         if (!token.matches("\\d+(.\\d{2})?")) {
-            throw new Exception("Value is in the incorrect format. Please specify as an integer or a float with two decimal points.");
+            throw new Exception("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.");
         }
         this.value = Float.parseFloat(token);
 
         // Check for next tokens for an account with correct format
         if (!st.hasMoreTokens()) {
-            throw new Exception("MOVE command must be in the format \"MOVE VALUE FROM TO\"");
+            throw new Exception(formatErrorMessage);
         }
         // Check for a FROM account
         from = parseAccount(st);
 
         // Check for next tokens for an account with correct format
         if (!st.hasMoreTokens()) {
-            throw new Exception("MOVE command must be in the format \"MOVE VALUE FROM TO\"");
+            throw new Exception(formatErrorMessage);
         }
         // Check for a TO account
         to = parseAccount(st);
 
         // Check that there are no more tokens
         if (st.hasMoreTokens()) {
-            throw new Exception("MOVE command must be in the format \"MOVE VALUE FROM TO\"");
+            throw new Exception(formatErrorMessage);
         }
 
         // Create account objects
@@ -81,7 +82,7 @@ public class TransactionManager {
                 do {
                     // Another check that ensures an open quote has an end quote
                     if(!st.hasMoreTokens()){
-                        throw new Exception("An account starting with a '\"' must end with a '\"'");
+                        throw new Exception("ERROR: An account starting with a '\"' must end with a '\"'");
                     }
                     token = st.nextToken();
                     builder.append(" ").append(token);
@@ -106,9 +107,9 @@ public class TransactionManager {
             toAccount.deposit(value, "internal transfer");
         }
         else{
-            return "The from account does not have enough balance";
+            return "FAILURE: " + fromAccount.getName() +  " has a balance of £" + String.format("%.2f",fromAccount.getBalance()) + ", which is insufficient";
         }
-        return "MOVE command successful";
+        return "SUCCESS: £" + String.format("%.2f",value) + " transferred from " + fromAccount.getName() + " to " + toAccount.getName();
     }
 
     private void checkPayCommand() {

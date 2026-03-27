@@ -3,18 +3,18 @@ package newbank.server;
 import java.sql.Date;
 
 public class Transaction {
-    private String Name;
+    private String reference;
     private double value;
     private Date date;
 
     public Transaction(String name, double value, Date date) {
-        Name = name;
+        reference = name;
         this.value = value;
         this.date = date;
     }
 
-    public String getName() {
-        return Name;
+    public String getReference() {
+        return reference;
     }
 
     public double getValue() {
@@ -28,7 +28,7 @@ public class Transaction {
     @Override
     public String toString() {
         return "Transaction{" +
-                "Name='" + Name + '\'' +
+                "Name='" + reference + '\'' +
                 ", value=" + value +
                 ", date=" + date +
                 '}';
