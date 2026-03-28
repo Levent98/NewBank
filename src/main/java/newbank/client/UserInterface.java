@@ -9,10 +9,13 @@ import java.io.InputStreamReader;
 public class UserInterface {
 
   private boolean isLoggedIn = false;
+  private boolean isNewUser = false;
   private String username;
   private String password;
   private BufferedReader userInput;
   private ExampleClient client;
+  // Avoiding declaring response at every input
+  private String response;
 
   // constructor starts wrapped input stream
   public UserInterface(){
@@ -23,6 +26,18 @@ public class UserInterface {
   public void start() {
 
     System.out.println("Welcome to NewBank");
+
+    // User creation, server will by default create a new user for a LOGIN command on non existent customer if flag newUser is passed
+    System.out.print("Are you a new user? Type \"YES\" or press Enter: ");
+    try {
+      response = userInput.readLine();
+    } catch (IOException e) {
+      System.out.println("An error has occured, please restart program\n");
+    }
+    if ("YES".equals(response)) {
+      System.out.println("We'll create you an account, please enter the new username and password");
+      isNewUser = true;
+    }
 
     while (true) {
       if (isLoggedIn == false){
@@ -44,10 +59,18 @@ public class UserInterface {
           }
 
           try {
-            client.sendCommand("LOGIN " + username + " " + password); // sends login details with LOGIN keyword so ClientHandler knows to authenticate
-            String response = client.readResponse(); 
+            // sends login details with LOGIN keyword so ClientHandler knows to authenticate + flag for user creation
+            client.sendCommand("LOGIN " + username + " " + password + " " + (isNewUser ? "newUser" : ""));
+            response = client.readResponse(); 
 
-            if ("SUCCESS" .equals(response)) {
+            // Need more complex error messages to account for weak password and already existing username
+            if (response != null && response.startsWith("ERROR")) {
+              System.out.println(response);
+              continue;
+            }
+            isNewUser = false; // reset isNewUser to false
+
+            if ("SUCCESS".equals(response)) {
               isLoggedIn = true;
               System.out.println("Login Successful\n");
               showMenu(); // display command menu
@@ -80,27 +103,19 @@ public class UserInterface {
           // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
           if ("LOGOUT".equals(userCommand)){
             client.sendCommand("LOGOUT");
-            String response = client.readResponse();
+            response = client.readResponse();
             System.out.println(response);
             isLoggedIn = false;
             continue; // back to login
-          }
-
-          if ("CHANGEPW".equals(userCommand)){
-            //ask for password
-            System.out.println("Enter new password ");
-            password = userInput.readLine();
-            client.sendCommand("CHANGEPW " + password);
-            // read new command
-            userCommand = userInput.readLine();
           }
 
           // send user command to server
           client.sendCommand(userCommand);
 
           // read and display response from server
-          String response = client.readResponse();
+          response = client.readResponse();
           System.out.println("NewBank: " + response);
+          System.out.print("> ");
 
         } catch (IOException e) {
           System.out.println("Error communicating with server");
@@ -121,9 +136,10 @@ public class UserInterface {
     System.out.println("PAY <person> <amount>");
     System.out.println("LOGOUT");
     System.out.println("EXIT");
+    System.out.println("CHANGEPW <new password>");
 
-    System.out.print("\nEnter command: ");
-    System.out.print("");
+    System.out.println("\nEnter command at the prompt");
+    System.out.print("> ");
   }
   // CLient side program start
   public static void main(String[] args){
@@ -131,5 +147,3 @@ public class UserInterface {
     ui.start();
   } 
 }  
-
-

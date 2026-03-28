@@ -43,6 +43,15 @@ public class NewBankClientHandler extends Thread {
             String username = parts[1];
             String password = parts[2];
 
+            // Adding creation flow
+            if (parts.length == 4 && "newUser".equals(parts[3])) {
+              response = bank.createLogInDetails(username, password);
+              if (!response.startsWith("SUCCESS")) {
+                out.println(response);
+                continue;
+              }
+            }
+
             // Authentication via NewBank method
             customer = bank.checkLogInDetails(username, password);
             if (customer != null) {

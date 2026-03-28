@@ -35,6 +35,22 @@ public class NewBank {
   public static NewBank getBank() {
     return bank;
   }
+
+  public synchronized String createLogInDetails(String userName, String password) {
+    if (customers.containsKey(userName)) {
+      return "ERROR: Username already in use";
+    }
+    String response = passwords.set(userName, password);
+    if (response.startsWith("ERROR")) {
+      return response;
+    }
+
+    // TODO as we won't give people money but copied from addTestData for now
+    Customer newCustomer = new Customer();
+    newCustomer.addAccount(new Account("Checking", 250.0));
+    customers.put(userName, newCustomer);
+    return "SUCCESS: Account created";
+  }
   
   // Marking them synchronized forces those calls to run one-at-a-time on that single NewBank instance, which avoids certain race conditions.
   // They use customers which is a non thread safe hashmap
