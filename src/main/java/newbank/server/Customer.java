@@ -33,7 +33,16 @@ public class Customer {
       }
     }
     // Default opening balance set to 0.0
-    accounts.add(new Account(name, 0.0));
+    accounts.add(new Account(name, 0.0f));
     return true;
+  }
+
+  public Account getAccount(String accountName){
+    for(Account account : accounts){
+      if (account.getName().equals(accountName)) {
+        return account;
+      }
+    }
+    return null;
   }
 }

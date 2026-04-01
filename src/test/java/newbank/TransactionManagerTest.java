@@ -1,5 +1,7 @@
 package newbank;
 
+import newbank.server.Account;
+import newbank.server.Customer;
 import newbank.server.CustomerID;
 import newbank.server.TransactionManager;
 import org.junit.jupiter.api.Test;
@@ -14,9 +16,10 @@ class TransactionManagerTest {
     @Test
     void constructor_TestExceptionMessage_IncorrectCommand() {
         String request1 = "INCORRECT 200 Holiday \"Not an Account\"";
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Main", 1000.0f));
         Exception exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request1);
+            new TransactionManager(customer, request1);
         });
         assertEquals("ERROR: Incorrect command", exception.getMessage());
     }
@@ -25,21 +28,22 @@ class TransactionManagerTest {
     @Test
     void constructor_TestExceptionMessage_AccountDoesNotExist() {
         String request1 = "MOVE 200 Holiday \"Not an Account\"";
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Holiday", 1000.0f));
         Exception exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request1);
+            new TransactionManager(customer, request1);
         });
         assertEquals("ERROR: The account \"Not an Account\" does not exist", exception.getMessage());
 
         String request2 = "MOVE 200 \"Not an Account\" Holiday";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request2);
+            new TransactionManager(customer, request2);
         });
         assertEquals("ERROR: The account \"Not an Account\" does not exist", exception.getMessage());
 
         String request3 = "MOVE 200 \"NotanAccount\" \"Not an Account\"";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request3);
+            new TransactionManager(customer, request3);
         });
         assertEquals("ERROR: The account \"NotanAccount\" does not exist", exception.getMessage());
     }
@@ -52,33 +56,34 @@ class TransactionManagerTest {
     @Test
     void constructor_TestExceptionMessage_RequestHasTooFewArguments() {
         String request1 = "MOVE";
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Holiday", 1000.0f));
         Exception exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request1);
+            new TransactionManager(customer, request1);
         });
         assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request2 = "MOVE 200";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request2);
+            new TransactionManager(customer, request2);
         });
         assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request3 = "MOVE 200 ACCOUNT1";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request3);
+            new TransactionManager(customer, request3);
         });
         assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request4 = "MOVE 200 ACCOUNT1 ACCOUNT2 ACCOUNT3";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request4);
+            new TransactionManager(customer, request4);
         });
         assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
 
         String request5 = "MOVE 200 \"ACCOUNT1 ACCOUNT2\"";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request5);
+            new TransactionManager(customer, request5);
         });
         assertEquals("ERROR: MOVE command must be in the format \"MOVE VALUE FROM TO\"", exception.getMessage());
     }
@@ -88,16 +93,17 @@ class TransactionManagerTest {
     void constructor_TestExceptionMessage_IncorrectNumericValue(){
         // Testing exception thrown by incorrect VALUE given
         String request1 = "MOVE 200.222 ACCOUNT1 ACCOUNT2";
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Holiday", 1000.0f));
         Exception exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request1);
+            new TransactionManager(customer, request1);
         });
         assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
 
 
         String request2 = "MOVE .222 ACCOUNT1 ACCOUNT2";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request2);
+            new TransactionManager(customer, request2);
         });
         assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
     }
@@ -106,25 +112,27 @@ class TransactionManagerTest {
     @Test
     void parseAccount_TestExceptionMessage_MissingQuotes(){
         String request1 = "MOVE 200 \"Holiday NotAnAccount";
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
         Exception exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request1);
+            new TransactionManager(customer, request1);
         });
         assertEquals("ERROR: An account starting with a '\"' must end with a '\"'", exception.getMessage());
 
 
         String request2 = "MOVE 200 Holiday \"Not an Account";
         exception = assertThrows(Exception.class, () -> {
-            new TransactionManager(customerID, request2);
+            new TransactionManager(customer, request2);
         });
         assertEquals("ERROR: An account starting with a '\"' must end with a '\"'", exception.getMessage());
     }
 
     @Test
     void parseAccount_TestCorrectValues() throws Exception {
-        CustomerID customerID = new CustomerID("Bhagy");
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Holiday", 1000.0f));
+        customer.addAccount(new Account("Current Account", 1000.0f));
         String request = "MOVE 200 Holiday \"Current Account\"";
-        TransactionManager transactionManager = new TransactionManager(customerID, request);
+        TransactionManager transactionManager = new TransactionManager(customer, request);
         String[] requests = {
                 "MOVE ACCOUNT1 ACCOUNT2",
                 "MOVE \"ACCOUNT2\" ACCOUNT2",

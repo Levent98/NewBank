@@ -3,15 +3,14 @@ package newbank.server;
 import java.util.StringTokenizer;
 
 public class TransactionManager {
-    // It should have a connection to the Account Data
-    private final CustomerID customerID;
+    private final Customer customer;
     private Account fromAccount;
     private Account toAccount;
     private float value;
     private final String request;
 
-    public TransactionManager(CustomerID customerID, String request) throws Exception {
-        this.customerID = customerID;
+    public TransactionManager(Customer customer, String request) throws Exception {
+        this.customer = customer;
         this.request = request;
 
         if(request.startsWith("MOVE")){
@@ -64,8 +63,14 @@ public class TransactionManager {
         }
 
         // Create account objects
-        this.fromAccount = new Account(customerID, from);
-        this.toAccount = new Account(customerID, to);
+        this.fromAccount = customer.getAccount(from);
+        if(fromAccount==null){
+            throw new Exception("ERROR: The account \"" + from + "\" does not exist");
+        }
+        this.toAccount = customer.getAccount(to);
+        if(toAccount==null){
+            throw new Exception("ERROR: The account \"" + to + "\" does not exist");
+        }
     }
 
     public String parseAccount(StringTokenizer st) throws Exception {

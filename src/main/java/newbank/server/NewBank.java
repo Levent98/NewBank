@@ -17,15 +17,15 @@ public class NewBank {
 
   private void addTestData() {
     Customer bhagy = new Customer();
-    bhagy.addAccount(new Account("Main", 1000.0));
+    bhagy.addAccount(new Account("Main", 1000.0f));
     customers.put("Bhagy", bhagy);
 
     Customer christina = new Customer();
-    christina.addAccount(new Account("Savings", 1500.0));
+    christina.addAccount(new Account("Savings", 1500.0f));
     customers.put("Christina", christina);
 
     Customer john = new Customer();
-    john.addAccount(new Account("Checking", 250.0));
+    john.addAccount(new Account("Checking", 250.0f));
     customers.put("John", john);
   }
 
@@ -95,7 +95,8 @@ public class NewBank {
             : "FAIL - an error occured.";
   }
 
-  public String moveMoney(CustomerID customer, String request) {
+  public String moveMoney(CustomerID customerID, String request) {
+    Customer customer = customers.get(customerID.getKey());
 
     // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;

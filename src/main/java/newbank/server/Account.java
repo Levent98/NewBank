@@ -1,6 +1,5 @@
 package newbank.server;
 
-import newbank.persistenceLayer.AccountDAO;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -11,9 +10,7 @@ public class Account {
 
   private final String accountName;
 
-  private double openingBalance;
   private float balance;
-  private AccountDAO accountDAO;
   private String sortCode;
   private int accountNumber ;
 
@@ -22,22 +19,10 @@ public class Account {
    * @param accountName
    * @param openingBalance
    */
-  public Account(String accountName, double openingBalance) {
+  public Account(String accountName, float openingBalance) {
     this.accountName = accountName;
-    this.openingBalance = openingBalance;
+    this.balance = openingBalance;
     // This bit should also create the account
-  }
-
-  /**
-   * Constructor used for retrieving the object of an existing account
-   * @param accountName - name of the account
-   * @param customerID - CustomerID
-   * @throws Exception
-   */
-  public Account(CustomerID customerID, String accountName) throws Exception {
-    this.accountName = accountName;
-    this.accountDAO = new AccountDAO(customerID, accountName);
-    this.balance = accountDAO.getAccountBalance();
   }
 
   public String getName() {
@@ -46,7 +31,7 @@ public class Account {
 
   @Override
   public String toString() {
-    return (accountName + ": " + openingBalance);
+    return (accountName + ": " + balance);
   }
 
   /**
@@ -66,7 +51,7 @@ public class Account {
     Transaction transaction = new Transaction(name,value,date);
 
     // add transaction to database
-    accountDAO.addTransaction(transaction);
+    // TO DO
 
     return "SUCCESS";
   }
@@ -92,7 +77,7 @@ public class Account {
     Transaction transaction = new Transaction(name,-value,date);
 
     // add transaction to database
-    accountDAO.addTransaction(transaction);
+    // TO DO
 
     return "SUCCESS";
   }
