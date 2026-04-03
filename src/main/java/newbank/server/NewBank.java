@@ -8,11 +8,17 @@ import java.util.StringTokenizer;
 public class NewBank {
 
   private static final NewBank bank = new NewBank();
-  private HashMap<String, Customer> customers;
-
-  public NewBank() {
+  // HashMap is not thread-safe with concurrent writes (adding/removing customers/accounts, transfers, etc.),
+  // unsynchronized access can lead to: lost updates inconsistent reads
+  private HashMap<String,Customer> customers;
+  // US01 Added a PasswordManager object to store passwords
+  private PasswordManager passwords;
+  
+  private NewBank() {
     customers = new HashMap<>();
     addTestData();
+    // US01 Added a PasswordManager object to store passwords
+    passwords = PasswordManager.getPasswordManager();
   }
 
   private void addTestData() {
@@ -33,40 +39,59 @@ public class NewBank {
     return bank;
   }
 
-  public synchronized CustomerID checkLogInDetails(String userName, String password) {
+  public synchronized String createLogInDetails(String userName, String password) {
     if (customers.containsKey(userName)) {
+      return "ERROR: Username already in use";
+    }
+    String response = passwords.set(userName, password);
+    if (response.startsWith("ERROR")) {
+      return response;
+    }
+
+    // TODO as we won't give people money but copied from addTestData for now
+    Customer newCustomer = new Customer();
+    newCustomer.addAccount(new Account("Checking", 250.0));
+    customers.put(userName, newCustomer);
+    return "SUCCESS: Account created";
+  }
+  
+  // Marking them synchronized forces those calls to run one-at-a-time on that single NewBank instance, which avoids certain race conditions.
+  // They use customers which is a non thread safe hashmap
+  public synchronized CustomerID checkLogInDetails(String userName, String password) {
+    // US02 Added password check before returning the CustomerID
+    if(customers.containsKey(userName) && passwords.check(userName, password)) {
       return new CustomerID(userName);
     }
     return null;
   }
 
+  public String changeLogInPassword(String userName, String password) {
+    if(!customers.containsKey(userName) || password == null) {
+      return "FAIL";
+    }
+    return passwords.set(userName, password);
+  }
+
+  // US01 simple account creation following addTestData() after checking for account already in use
+  public synchronized CustomerID setLogInDetails(String userName, String password) {
+    if (userName == null || customers.containsKey(userName)) {
+      return null;
+    }
+    Customer user = new Customer();
+    user.addAccount(new Account("Checking", 250.0));
+    customers.put(userName, user);
+    passwords.set(userName, password);
+    return new CustomerID(userName);
+  }
+
   // commands from the NewBank customer are processed in this method
   public synchronized String processRequest(CustomerID customer, String request) {
-    if (customers.containsKey(customer.getKey())) {
-
-      // Find the first space as expects user to type in "NEWACCOUNT ACCOUNTNAME"
-      int firstSpace = request.indexOf(" ");
-
-      // Extract command
-      String command = (firstSpace == -1)
-              ? request
-              : request.substring(0, firstSpace);
-
-      // Extract argument (account name)
-      String argument = (firstSpace == -1)
-              ? null
-              : request.substring(firstSpace + 1).trim();
-
-      // CLI action based on user input - this is where we could add further commands
-      switch (command) {
-        case "SHOWMYACCOUNTS":
-          return showMyAccounts(customer);
-        case "NEWACCOUNT":
-          return handleNewAccount(customer, argument);
-        case "MOVE":
-          return moveMoney(customer, request);
-        default:
-          return "FAIL";
+    //protect customer ID stauts against customer = null in client handler
+    if(customer != null && customers.containsKey(customer.getKey())) {
+      switch(request) {
+      case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
+      //case "CHANGEPW" : return setPassword(customers.getKey(), password);
+      default : return "Command not recognised.";
       }
     }
     return "FAIL";

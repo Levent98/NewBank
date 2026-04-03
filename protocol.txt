@@ -17,3 +17,13 @@ Returns SUCCESS or FAIL
 PAY <Person/Company> <Ammount>
 e.g. PAY John 100
 Returns SUCCESS or FAIL
+
+LOGOUT
+e.g. LOGOUT
+Returns "User Logout: John" and "LOGGED OUT"
+
+EXIT
+e.g. EXIT
+Returns "Thanks for using NewBank" "User Logout: John"
+
+#TODO: Ability to EXIT after LOGOUT without logging back in?
