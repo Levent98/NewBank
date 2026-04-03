@@ -7,7 +7,9 @@ public class TransactionManager {
     private Account fromAccount;
     private Account toAccount;
     private float value;
+    private String payee;
     private final String request;
+    private static final float MAX_PAYMENT = 3500.0f;
 
     public TransactionManager(Customer customer, String request) throws Exception {
         this.customer = customer;
@@ -117,10 +119,59 @@ public class TransactionManager {
         return "SUCCESS: £" + String.format("%.2f",value) + " transferred from " + fromAccount.getName() + " to " + toAccount.getName();
     }
 
-    private void checkPayCommand() {
+    private void checkPayCommand() throws Exception {
+    String from;
+    StringTokenizer st = new StringTokenizer(request, " ");
+
+    st.nextToken();
+
+    String formatErrorMessage =
+        "ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"";
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
     }
-    // Placeholder methods for the PAY command
-    public String makePayment(){
-        return "PAY command successful";
+    from = parseAccount(st);
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
     }
+    this.payee = parseAccount(st);
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+    String token = st.nextToken();
+
+    if (!token.matches("\\d+(\\.\\d{2})?")) {
+        throw new Exception("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.");
+    }
+    this.value = Float.parseFloat(token);
+
+    if (value > MAX_PAYMENT) {
+        throw new Exception("FAIL - Max payment " + MAX_PAYMENT);
+    }
+
+    if (st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+
+    this.fromAccount = customer.getAccount(from);
+    if (fromAccount == null) {
+        throw new Exception("FAIL - Account name not valid");
+    }
+}
+
+     public String payMoney() {
+    try {
+        if (fromAccount.withdrawOrPay(value, payee) != null) {
+            return "SUCCESS - you sent " + payee + " " + String.format("%.2f", value);
+        } else {
+            return "FAIL - Insufficient balance";
+        }
+    } catch (Exception e) {
+        return "FAIL - System error";
+    }
+  }
+    
 }

@@ -110,6 +110,8 @@ public class NewBank {
           return handleNewAccount(customer, argument);
         case "MOVE":
           return moveMoney(customer, request);
+        case "PAY":
+          return payMoney(customer, request);
         default:
           return "Command not recognised";
       }
@@ -151,5 +153,18 @@ public class NewBank {
       return e.getMessage();
     }
     return transactionManager.moveMoney();
+  }
+
+  public String payMoney(CustomerID customerID, String request) {
+    Customer customer = customers.get(customerID.getKey());
+
+    // Here we need to pass the values to the TransactionManager
+    TransactionManager transactionManager;
+    try {
+      transactionManager = new TransactionManager(customer, request);
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+    return transactionManager.payMoney();
   }
 }
