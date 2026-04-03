@@ -50,7 +50,7 @@ public class NewBank {
 
     // TODO as we won't give people money but copied from addTestData for now
     Customer newCustomer = new Customer();
-    newCustomer.addAccount(new Account("Checking", 250.0));
+    newCustomer.addAccount(new Account("Checking", 250.0f));
     customers.put(userName, newCustomer);
     return "SUCCESS: Account created";
   }
@@ -78,7 +78,7 @@ public class NewBank {
       return null;
     }
     Customer user = new Customer();
-    user.addAccount(new Account("Checking", 250.0));
+    user.addAccount(new Account("Checking", 250.0f));
     customers.put(userName, user);
     passwords.set(userName, password);
     return new CustomerID(userName);
@@ -88,13 +88,33 @@ public class NewBank {
   public synchronized String processRequest(CustomerID customer, String request) {
     //protect customer ID stauts against customer = null in client handler
     if(customer != null && customers.containsKey(customer.getKey())) {
-      switch(request) {
-      case "SHOWMYACCOUNTS" : return showMyAccounts(customer);
-      //case "CHANGEPW" : return setPassword(customers.getKey(), password);
-      default : return "Command not recognised.";
+  
+      // Find the first space as expects user to type in "NEWACCOUNT ACCOUNTNAME"
+      int firstSpace = request.indexOf(" ");
+
+      // Extract command
+      String command = (firstSpace == -1)
+              ? request
+              : request.substring(0, firstSpace);
+
+      // Extract argument (account name)
+      String argument = (firstSpace == -1)
+              ? null
+              : request.substring(firstSpace + 1).trim();
+
+      // CLI action based on user input - this is where we could add further commands
+      switch (command) {
+        case "SHOWMYACCOUNTS":
+          return showMyAccounts(customer);
+        case "NEWACCOUNT":
+          return handleNewAccount(customer, argument);
+        case "MOVE":
+          return moveMoney(customer, request);
+        default:
+          return "Command not recognised";
       }
     }
-    return "FAIL";
+    return "Command not recognised";
   }
 
   private String showMyAccounts(CustomerID customer) {

@@ -38,7 +38,7 @@ public class TransactionManager {
             throw new Exception(formatErrorMessage);
         }
         String token = st.nextToken();
-        if (!token.matches("\\d+(.\\d{2})?")) {
+        if (!token.matches("\\d+(\\.\\d{2})?")) {
             throw new Exception("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.");
         }
         this.value = Float.parseFloat(token);

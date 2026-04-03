@@ -1,4 +1,4 @@
-package newbank;
+package server;
 
 import newbank.server.PasswordManager;
 

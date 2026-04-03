@@ -70,7 +70,7 @@ public class UserInterface {
             }
             isNewUser = false; // reset isNewUser to false
 
-            if ("SUCCESS".equals(response)) {
+            if (response != null && response.startsWith("SUCCESS")) {
               isLoggedIn = true;
               System.out.println("Login Successful\n");
               showMenu(); // display command menu
