@@ -1,9 +1,13 @@
 package newbank.server;
 
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 public class TransactionManager {
     private final Customer customer;
+    private final HashMap<String, Customer> customers;
+    private Customer recipientCustomer;
+    private Account recipientAccount;
     private Account fromAccount;
     private Account toAccount;
     private float value;
@@ -12,7 +16,12 @@ public class TransactionManager {
     private static final float MAX_PAYMENT = 3500.0f;
 
     public TransactionManager(Customer customer, String request) throws Exception {
+    this(customer, null, request);
+    }
+
+    public TransactionManager(Customer customer, HashMap<String, Customer> customers, String request) throws Exception {
         this.customer = customer;
+        this.customers = customers;
         this.request = request;
 
         if(request.startsWith("MOVE")){
@@ -149,7 +158,7 @@ public class TransactionManager {
     this.value = Float.parseFloat(token);
 
     if (value > MAX_PAYMENT) {
-        throw new Exception("FAIL - Max payment " + MAX_PAYMENT);
+        throw new Exception("FAIL - Max Payment " + MAX_PAYMENT);
     }
 
     if (st.hasMoreTokens()) {
@@ -160,18 +169,32 @@ public class TransactionManager {
     if (fromAccount == null) {
         throw new Exception("FAIL - Account name not valid");
     }
+
+    if (customers == null) {
+        throw new Exception("FAIL - System error");
+    }
+
+    this.recipientCustomer = customers.get(payee);
+    if (recipientCustomer == null) {
+        throw new Exception("FAIL - Account name not valid");
+    }
+
+    this.recipientAccount = recipientCustomer.getFirstAccount();
+    if (recipientAccount == null) {
+        throw new Exception("FAIL - System error");
+    }
 }
 
+
      public String payMoney() {
-    try {
-        if (fromAccount.withdrawOrPay(value, payee) != null) {
-            return "SUCCESS - you sent " + payee + " " + String.format("%.2f", value);
-        } else {
-            return "FAIL - Insufficient balance";
-        }
-    } catch (Exception e) {
-        return "FAIL - System error";
+    if (fromAccount.withdrawOrPay(value, payee) != null) {
+        recipientAccount.deposit(value, "payment received");
+        return "SUCCESS - you sent " + payee + " " + String.format("%.2f", value);
     }
+    else{
+        return "FAIL - Insufficient balance";
+    }
+
   }
     
 }

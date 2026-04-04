@@ -161,7 +161,7 @@ public class NewBank {
     // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;
     try {
-      transactionManager = new TransactionManager(customer, request);
+      transactionManager = new TransactionManager(customer, customers, request);
     } catch (Exception e) {
       return e.getMessage();
     }
