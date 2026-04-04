@@ -7,58 +7,34 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class ExampleClient extends Thread{
+public class ExampleClient {
 
-  private Socket server;
-  private PrintWriter bankServerOut;	
-  private BufferedReader userInput;
-  private Thread bankServerResponseThread;
+    private Socket server;
+    private PrintWriter bankServerOut;
+    private BufferedReader serverIn;
 
-  public ExampleClient(String ip, int port) throws UnknownHostException, IOException {
-    server = new Socket(ip,port);
-    userInput = new BufferedReader(new InputStreamReader(System.in)); 
-    // server.getOutputStream() gives you an output stream to the server
-    // PrintWriter(server.getOutputStream(), true) wraps this stream to send lines of text (with auto-flush)
-    bankServerOut = new PrintWriter(server.getOutputStream(), true); 
-
-    bankServerResponseThread = new Thread() {
-      private BufferedReader bankServerIn = new BufferedReader(new InputStreamReader(server.getInputStream())); 
-
-      @Override
-      public void run() {
-        try {
-          while(true) {
-            String responce = bankServerIn.readLine();
-            System.out.println(responce);
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
-          return;
-        }
-      }
-    };
-    bankServerResponseThread.start();
-  }
-
-  @Override
-  public void run() {
-    // restart the input loop if an exception occurs,
-    // but usually, if userInput.readLine() fails, the program is not recoverable.
-    while(true) {
-      try {
-        while(true) {
-          String command = userInput.readLine();
-          bankServerOut.println(command);
-        }				
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-        // no return stmt because the outter while restarts the thread if needed
-      }
+    public ExampleClient(String ip, int port) throws UnknownHostException, IOException {
+        server = new Socket(ip, port);
+        bankServerOut = new PrintWriter(server.getOutputStream(), true);
+        serverIn = new BufferedReader(new InputStreamReader(server.getInputStream()));
     }
-  }
 
-  public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException {
-    new ExampleClient("localhost",14002).start();
-  }
+    public void sendCommand(String command) {
+        bankServerOut.println(command);
+    }
+
+    public String readResponse() throws IOException {
+        String response = serverIn.readLine();
+
+        if (response == null) {
+            throw new IOException("Server disconnected");
+        }
+
+        return response.trim();
+    }
+
+    // close server connection
+    public void close() throws IOException {
+        server.close();
+    }
 }
