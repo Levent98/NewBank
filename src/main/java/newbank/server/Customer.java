@@ -45,4 +45,11 @@ public class Customer {
     }
     return null;
   }
+
+  public Account getFirstAccount() {
+    if (accounts.isEmpty()) {
+        return null;
+    }
+    return accounts.get(0);
+  } 
 }

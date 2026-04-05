@@ -66,6 +66,75 @@ public class NewBankTest {
       assertEquals("FAIL - an error occured.", result,
                 "System should prevent creation of more than 10 accounts.");
     }
+
+    // Additional tests for PAY commands
+
+      @Test
+  void processRequest_PayValidRecipient_ReturnsSuccessMessage() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    String result = bank.processRequest(customer, "PAY Main John 100");
+
+    assertEquals("SUCCESS - you sent John 100.00", result,
+            "System should confirm successful payment.");
+  }
+
+  @Test
+  void processRequest_PayInvalidSourceAccount_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    String result = bank.processRequest(customer, "PAY FakeAccount John 100");
+
+    assertEquals("FAIL - Account name not valid", result,
+            "System should notify user when the source account name is invalid.");
+  }
+
+  @Test
+  void processRequest_PayInvalidRecipient_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    String result = bank.processRequest(customer, "PAY Main FakeUser 100");
+
+    assertEquals("FAIL - Account name not valid", result,
+            "System should notify user when the recipient user is invalid.");
+  }
+
+  @Test
+  void processRequest_PayInsufficientBalance_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("John");
+
+    String result = bank.processRequest(customer, "PAY Checking Christina 1000");
+
+    assertEquals("FAIL - Insufficient balance", result,
+            "System should notify user when balance is insufficient.");
+  }
+
+  @Test
+  void processRequest_PayMalformedCommand_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("John");
+
+    String result = bank.processRequest(customer, "PAY Checking John");
+
+    assertEquals("ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"", result,
+        "System should notify user when PAY command format is invalid.");
+  }
+
+  @Test
+  void processRequest_PayAboveMaxLimit_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    String result = bank.processRequest(customer, "PAY Main John 4000");
+
+    assertEquals("FAIL - Max Payment 3500.0", result,
+            "System should prevent payments above the maximum allowed amount.");
+  }
+  
 }
 
 

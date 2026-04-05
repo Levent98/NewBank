@@ -3,6 +3,7 @@ package newbank;
 import newbank.server.Account;
 import newbank.server.Customer;
 import newbank.server.CustomerID;
+import newbank.server.NewBank;
 import newbank.server.TransactionManager;
 import org.junit.jupiter.api.Test;
 
@@ -160,5 +161,91 @@ class TransactionManagerTest {
             assertEquals(expectedResults[i],transactionManager.parseAccount(st));
         }
     }
+
+    @Test
+    void constructor_TestExceptionMessage_PayAccountDoesNotExist() {
+        String request = "PAY FakeAccount John 100";
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Checking", 250.0f));
+
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request);
+        });
+        assertEquals("FAIL - Account name not valid", exception.getMessage());
+    }
+
+    @Test
+    void constructor_TestExceptionMessage_PayRequestHasTooFewArguments() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Checking", 250.0f));
+
+        String request1 = "PAY";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request1);
+        });
+        assertEquals("ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"", exception.getMessage());
+
+        String request2 = "PAY Checking";
+        exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request2);
+        });
+        assertEquals("ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"", exception.getMessage());
+
+        String request3 = "PAY Checking John";
+        exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request3);
+        });
+        assertEquals("ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"", exception.getMessage());
+    }
+
+    @Test
+    void constructor_TestExceptionMessage_PayIncorrectNumericValue() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Checking", 250.0f));
+
+        String request1 = "PAY Checking John 100.222";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request1);
+        });
+        assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
+
+        String request2 = "PAY Checking John .222";
+        exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request2);
+        });
+        assertEquals("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.", exception.getMessage());
+    }
+
+    @Test
+    void constructor_TestExceptionMessage_PayMaxPaymentExceeded() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Checking", 5000.0f));
+
+        String request = "PAY Checking John 4000";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request);
+        });
+        assertEquals("FAIL - Max Payment 3500.0", exception.getMessage());
+    }
+
+    @Test
+    void payMoney_TestCorrectValues_InsufficientBalance() throws Exception {
+        NewBank bank = NewBank.getBank();
+        CustomerID customer = new CustomerID("John");
+
+        String result = bank.processRequest(customer, "PAY Checking Christina 1000");
+        assertEquals("FAIL - Insufficient balance", result);
+    }
+
+    @Test
+    void payMoney_TestCorrectValues_InvalidRecipient() throws Exception {
+        NewBank bank = NewBank.getBank();
+        CustomerID customer = new CustomerID("Bhagy");
+
+        String result = bank.processRequest(customer, "PAY Main FakeUser 100");
+        assertEquals("FAIL - Account name not valid", result);
+    }
+
+
 
 }
