@@ -3,6 +3,7 @@ package newbank.server;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.HashMap;
+//import java.util.HashMap.*;
 import java.util.StringTokenizer;
 
 public class NewBank {
@@ -10,29 +11,37 @@ public class NewBank {
   private static final NewBank bank = new NewBank();
   // HashMap is not thread-safe with concurrent writes (adding/removing customers/accounts, transfers, etc.),
   // unsynchronized access can lead to: lost updates inconsistent reads
-  private HashMap<String,Customer> customers;
+  private final HashMap<String,Customer> customers;
   // US01 Added a PasswordManager object to store passwords
-  private PasswordManager passwords;
+  private final PasswordManager customerPasswords;
+  // US09 Added an employee instance
+  private final PasswordManager employeePasswords;
   
   private NewBank() {
     customers = new HashMap<>();
+    // US01 and 09 Added a PasswordManager object to store passwords
+    customerPasswords = new PasswordManager();
+    employeePasswords = new PasswordManager();
     addTestData();
-    // US01 Added a PasswordManager object to store passwords
-    passwords = PasswordManager.getPasswordManager();
   }
 
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
     customers.put("Bhagy", bhagy);
+    customerPasswords.setUnchecked("Bhagy", "bhagy");
 
     Customer christina = new Customer();
     christina.addAccount(new Account("Savings", 1500.0f));
     customers.put("Christina", christina);
+    customerPasswords.setUnchecked("Christina", "christina");
 
     Customer john = new Customer();
     john.addAccount(new Account("Checking", 250.0f));
     customers.put("John", john);
+    customerPasswords.setUnchecked("John", "john");
+
+    employeePasswords.setUnchecked("Admin", "admin");
   }
 
   public static NewBank getBank() {
@@ -43,7 +52,7 @@ public class NewBank {
     if (customers.containsKey(userName)) {
       return "ERROR: Username already in use";
     }
-    String response = passwords.set(userName, password);
+    String response = customerPasswords.set(userName, password);
     if (response.startsWith("ERROR")) {
       return response;
     }
@@ -59,17 +68,27 @@ public class NewBank {
   // They use customers which is a non thread safe hashmap
   public synchronized CustomerID checkLogInDetails(String userName, String password) {
     // US02 Added password check before returning the CustomerID
-    if(customers.containsKey(userName) && passwords.check(userName, password)) {
-      return new CustomerID(userName);
+    if(customers.containsKey(userName) && customerPasswords.check(userName, password)) {
+      return new CustomerID(userName, CustomerID.Role.CUSTOMER);
+    }
+    if (employeePasswords.check(userName, password)) {
+      return new CustomerID(userName, CustomerID.Role.EMPLOYEE);
     }
     return null;
   }
 
   public String changeLogInPassword(String userName, String password) {
-    if(!customers.containsKey(userName) || password == null) {
+    if (password == null) {
       return "FAIL";
     }
-    return passwords.set(userName, password);
+    // Update whichever store owns this username
+    if (customerPasswords.hasUserName(userName)) {
+      return customerPasswords.set(userName, password);
+    }
+    if (employeePasswords.hasUserName(userName)) {
+      return employeePasswords.set(userName, password);
+    }
+    return "FAIL";
   }
 
   // US01 simple account creation following addTestData() after checking for account already in use
@@ -80,14 +99,27 @@ public class NewBank {
     Customer user = new Customer();
     user.addAccount(new Account("Checking", 250.0f));
     customers.put(userName, user);
-    passwords.set(userName, password);
+    customerPasswords.set(userName, password);
     return new CustomerID(userName);
   }
 
   // commands from the NewBank customer are processed in this method
-  public synchronized String processRequest(CustomerID customer, String request) {
+    public synchronized String processRequest(CustomerID customer, String request) {
+      if (customer == null) {
+        return "Command not recognised";
+      }
+
+      // this could be done vs password manager if tests are changed
+      boolean isEmployee = customer.isEmployee();
+      boolean isCustomer = customers.containsKey(customer.getKey());
+
+      // Employees are always admitted; non-employees must be in the customers map
+      if (!isEmployee && !isCustomer) {
+        return "Command not recognised";
+      }
+
     //protect customer ID stauts against customer = null in client handler
-    if(customer != null && customers.containsKey(customer.getKey())) {
+    //if(customers.containsKey(customer.getKey())) {
   
       // Find the first space as expects user to type in "NEWACCOUNT ACCOUNTNAME"
       int firstSpace = request.indexOf(" ");
@@ -104,19 +136,31 @@ public class NewBank {
 
       // CLI action based on user input - this is where we could add further commands
       switch (command) {
+        case "VIEWALL":
+          if (!isEmployee) return "Command not recognised";
+          return viewAllCustomers();
         case "SHOWMYACCOUNTS":
+          if (!isCustomer) return "Command not recognised";
           return showMyAccounts(customer);
         case "NEWACCOUNT":
+          if (!isCustomer) return "Command not recognised";
           return handleNewAccount(customer, argument);
         case "MOVE":
+          if (!isCustomer) return "Command not recognised";
           return moveMoney(customer, request);
         case "PAY":
+          if (!isCustomer) return "Command not recognised";
           return payMoney(customer, request);
         default:
           return "Command not recognised";
       }
-    }
-    return "Command not recognised";
+    //}
+    //return "Command not recognised";
+  }
+
+  // BUG only sends back one string at a time if using \n in String.join
+  private String viewAllCustomers() {
+    return String.join(" || ", customers.keySet());
   }
 
   private String showMyAccounts(CustomerID customer) {

@@ -10,6 +10,7 @@ public class UserInterface {
 
   private boolean isLoggedIn = false;
   private boolean isNewUser = false;
+  private boolean isEmployee = false;
   private String username;
   private String password;
   private BufferedReader userInput;
@@ -72,6 +73,8 @@ public class UserInterface {
 
             if (response != null && response.startsWith("SUCCESS")) {
               isLoggedIn = true;
+              // US09 to give visual feedback to the UI
+              isEmployee = response.contains("EMPLOYEE");
               System.out.println("Login Successful\n");
               showMenu(); // display command menu
             } else {
@@ -105,7 +108,9 @@ public class UserInterface {
             client.sendCommand("LOGOUT");
             response = client.readResponse();
             System.out.println(response);
+            // Clearing flags here
             isLoggedIn = false;
+            isEmployee = false;
             continue; // back to login
           }
 
@@ -115,7 +120,7 @@ public class UserInterface {
           // read and display response from server
           response = client.readResponse();
           System.out.println("NewBank: " + response);
-          System.out.print("> ");
+          System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
 
         } catch (IOException e) {
           System.out.println("Error communicating with server");
@@ -130,18 +135,22 @@ public class UserInterface {
     System.out.print("Please type a command in the terminal window.\n");
 
     System.out.println("\nMenu Options:");
-    System.out.println("\nSHOWMYACCOUNTS");
-    System.out.println("NEWACCOUNT <name>");
-    System.out.println("MOVE <amount> <from> <to>");
-    System.out.println("PAY <person> <amount>");
+    if (isEmployee) {
+      System.out.println("\nVIEWALL");
+    } else {
+      System.out.println("\nSHOWMYACCOUNTS");
+      System.out.println("NEWACCOUNT <name>");
+      System.out.println("MOVE <amount> <from> <to>");
+      System.out.println("PAY <person> <amount>");
+    }
     System.out.println("LOGOUT");
     System.out.println("EXIT");
     System.out.println("CHANGEPW <new password>");
 
     System.out.println("\nEnter command at the prompt");
-    System.out.print("> ");
+    System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
   }
-  // CLient side program start
+  // Client side program start
   public static void main(String[] args){
     UserInterface ui = new UserInterface();
     ui.start();

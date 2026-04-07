@@ -7,7 +7,7 @@ import com.password4j.Hash;
 import com.password4j.Password;
 import com.password4j.types.Argon2;
 
-public class PasswordManager {
+public class PasswordManager extends HashMap {
 
   // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
   // https://github.com/Password4j/password4j/wiki/Argon2
@@ -26,16 +26,15 @@ public class PasswordManager {
   private static final Argon2Function ARGON2ID =
     Argon2Function.getInstance(MEMORY_KIB, ITERATIONS, PARALLELISATION, OUTPUT_LENGTH, Argon2.ID, VERSION);
 
-  // Singleton pattern
-  private static final PasswordManager passwordManager = new PasswordManager();
   private HashMap<String,String> passwords;
 
-  private PasswordManager() {
+  public PasswordManager() {
     passwords = new HashMap<>();
     // This prepopulates the in-memory hash table with some values and can be disabled later
-    addTestData();
+    //addTestData();
   }
 
+  /*
   private void addTestData() {
     // The first String is the customer ID, the second the password
     Hash bhagyHash = Password.hash("bhagy").addRandomSalt(SALT).with(ARGON2ID);
@@ -47,6 +46,7 @@ public class PasswordManager {
     Hash johnHash = Password.hash("john").addRandomSalt(SALT).with(ARGON2ID);
     passwords.put("John", johnHash.getResult());
   }
+  */
 
   // US01 simple password strength as per user story, could be improved upon
   // This could be used outside of this class if needs be
@@ -54,9 +54,11 @@ public class PasswordManager {
     return password != null && password.length() >= PASSWORD_LENGTH;
   }
 
+  /*
   public static PasswordManager getPasswordManager() {
     return passwordManager;
   }
+  */
 
   public boolean check(String userName, String userProvidedPassword) {
     if (!hasUserName(userName)) {
@@ -92,6 +94,17 @@ public class PasswordManager {
       return "SUCCESS: Password changed";
     }
   }
+
+  // Bypasses the password-strength check. Use only for seeding test / demo data.
+  String setUnchecked(String userName, String password) {
+    if (userName == null || password == null) {
+      return "ERROR: Please provide username and password";
+    }
+    Hash userHash = Password.hash(password).addRandomSalt(SALT).with(ARGON2ID);
+    passwords.put(userName, userHash.getResult());
+    return "SUCCESS";
+  }
+
 
   public boolean hasUserName(String userName) {
     if (userName == null) {

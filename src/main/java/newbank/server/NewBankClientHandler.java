@@ -56,7 +56,7 @@ public class NewBankClientHandler extends Thread {
             customer = bank.checkLogInDetails(username, password);
             if (customer != null) {
               System.out.println("User Login: " + username); // prints to bank side terminal
-              response = "SUCCESS"; // reponse to UI switches it to logged in state
+              response = customer.isEmployee() ? "SUCCESS EMPLOYEE" : "SUCCESS";
             } else {
               System.out.println("Failed user login: " + username); // prints to bank side temrinal
               response = "FAIL"; // response to UI
