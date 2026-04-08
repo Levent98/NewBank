@@ -19,7 +19,7 @@ public class UserInterface {
   private String response;
 
   // constructor starts wrapped input stream
-  public UserInterface(){
+  public UserInterface() {
     userInput = new BufferedReader(new InputStreamReader(System.in)); 
   }
 
@@ -51,6 +51,12 @@ public class UserInterface {
           System.out.println("Enter Password ");
           password = userInput.readLine();
 
+          // Input validation "|" will be used for messages
+          if (username.isEmpty() || username.contains("|") || password.isEmpty() || password.contains("|")) {
+            System.out.println("Username and password must not be empty or contain '|'. Please try again.\n");
+            continue;
+          }
+
           //start new client connection
           try {
             client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
@@ -61,7 +67,8 @@ public class UserInterface {
 
           try {
             // sends login details with LOGIN keyword so ClientHandler knows to authenticate + flag for user creation
-            client.sendCommand("LOGIN " + username + " " + password + " " + (isNewUser ? "newUser" : ""));
+            // changed " " to "|" to separate arguments in the message sent to the server
+            client.sendCommand("LOGIN|" + username + "|" + password + "|" + (isNewUser ? "newUser" : ""));
             response = client.readResponse(); 
 
             // Need more complex error messages to account for weak password and already existing username
@@ -112,14 +119,23 @@ public class UserInterface {
             isLoggedIn = false;
             isEmployee = false;
             continue; // back to login
+          } else if (userCommand.contains("|")) {
+            System.out.println("\"|\" is not a valid character");
+            continue;
           }
 
-          // send user command to server
-          client.sendCommand(userCommand);
+          // send user command to server, switching to new protocole: command|arguments
+          String commandToSend = userCommand.replaceFirst(" ", "|");
+          client.sendCommand(commandToSend);
 
           // read and display response from server
           response = client.readResponse();
-          System.out.println("NewBank: " + response);
+          String[] lines = response.split("\\|");
+          // process multi line reponses
+          System.out.println("NewBank: ");
+          for (String item : lines) {
+            System.out.println("  " + item.trim());
+          }
           System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
 
         } catch (IOException e) {
@@ -129,7 +145,7 @@ public class UserInterface {
     }    
   }
   // menu display method
-  private void showMenu(){
+  private void showMenu() {
     System.out.print("Welcome to NewBank,\n");
     System.out.print("This service is controlled via command line.\n");
     System.out.print("Please type a command in the terminal window.\n");
@@ -151,7 +167,7 @@ public class UserInterface {
     System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
   }
   // Client side program start
-  public static void main(String[] args){
+  public static void main(String[] args) {
     UserInterface ui = new UserInterface();
     ui.start();
   } 

@@ -104,7 +104,7 @@ public class NewBank {
   }
 
   // commands from the NewBank customer are processed in this method
-    public synchronized String processRequest(CustomerID customer, String request) {
+    public synchronized String processRequest(CustomerID customer, String command, String args) {
       if (customer == null) {
         return "Command not recognised";
       }
@@ -118,22 +118,6 @@ public class NewBank {
         return "Command not recognised";
       }
 
-    //protect customer ID stauts against customer = null in client handler
-    //if(customers.containsKey(customer.getKey())) {
-  
-      // Find the first space as expects user to type in "NEWACCOUNT ACCOUNTNAME"
-      int firstSpace = request.indexOf(" ");
-
-      // Extract command
-      String command = (firstSpace == -1)
-              ? request
-              : request.substring(0, firstSpace);
-
-      // Extract argument (account name)
-      String argument = (firstSpace == -1)
-              ? null
-              : request.substring(firstSpace + 1).trim();
-
       // CLI action based on user input - this is where we could add further commands
       switch (command) {
         case "VIEWALL":
@@ -144,23 +128,21 @@ public class NewBank {
           return showMyAccounts(customer);
         case "NEWACCOUNT":
           if (!isCustomer) return "Command not recognised";
-          return handleNewAccount(customer, argument);
+          return handleNewAccount(customer, args);
         case "MOVE":
           if (!isCustomer) return "Command not recognised";
-          return moveMoney(customer, request);
+          return moveMoney(customer, args);
         case "PAY":
           if (!isCustomer) return "Command not recognised";
-          return payMoney(customer, request);
+          return payMoney(customer, args);
         default:
           return "Command not recognised";
       }
-    //}
-    //return "Command not recognised";
   }
 
-  // BUG only sends back one string at a time if using \n in String.join
+  // Adapter to new client-server protocol
   private String viewAllCustomers() {
-    return String.join(" || ", customers.keySet());
+    return String.join("|", customers.keySet());
   }
 
   private String showMyAccounts(CustomerID customer) {
@@ -186,26 +168,26 @@ public class NewBank {
             : "FAIL - an error occured.";
   }
 
-  public String moveMoney(CustomerID customerID, String request) {
+  public String moveMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
     // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;
     try {
-      transactionManager = new TransactionManager(customer, request);
+      transactionManager = new TransactionManager(customer, "MOVE " + args);
     } catch (Exception e) {
       return e.getMessage();
     }
     return transactionManager.moveMoney();
   }
 
-  public String payMoney(CustomerID customerID, String request) {
+  public String payMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
     // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;
     try {
-      transactionManager = new TransactionManager(customer, customers, request);
+      transactionManager = new TransactionManager(customer, customers, "PAY " + args);
     } catch (Exception e) {
       return e.getMessage();
     }
