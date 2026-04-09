@@ -32,19 +32,25 @@ public class NewBankClientHandler extends Thread {
         if (request == null) {
           break;
         }
-        String response; // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
+        // Split request "command|argument" into requestParse as ["command", "argument"]
+        String[] requestParsed = request.split("\\|", 2);
+        String command = requestParsed[0];
+        String args = (requestParsed.length > 1) ? requestParsed[1] : "";
+        // response is used for pairing in UI to handle UI case 1 or 2 (login or UI menu)
+        String response;
 
         // Login with keyword to distinuish UI state from menu command
-        if (request.startsWith("LOGIN")) {
-          String[] parts = request.split(" ");
-          if (parts.length < 3) {
-            response = "FAIL"; // at UI login entry both username and password should be entered to satisfy requirements (keyword LOGIN counts as 1 part here)
+        if ("LOGIN".equals(command)) {
+          String[] parts = args.split("\\|", 3);
+          // at UI login entry both username and password should be entered and valid
+          if (parts.length < 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
+            response = "FAIL";
           } else {
-            String username = parts[1];
-            String password = parts[2];
+            String username = parts[0];
+            String password = parts[1];
 
             // Adding creation flow
-            if (parts.length == 4 && "newUser".equals(parts[3])) {
+            if (parts.length == 3 && "newUser".equals(parts[2])) {
               response = bank.createLogInDetails(username, password);
               if (!response.startsWith("SUCCESS")) {
                 out.println(response);
@@ -56,19 +62,20 @@ public class NewBankClientHandler extends Thread {
             customer = bank.checkLogInDetails(username, password);
             if (customer != null) {
               System.out.println("User Login: " + username); // prints to bank side terminal
-              response = "SUCCESS"; // reponse to UI switches it to logged in state
+              response = customer.isEmployee() ? "SUCCESS EMPLOYEE" : "SUCCESS";
             } else {
-              System.out.println("Failed user login: " + username); // prints to bank side temrinal
+              System.out.println("Failed user login: " + username); // prints to bank side terminal
               response = "FAIL"; // response to UI
             }
           }
-        } else if (request.startsWith("CHANGEPW")) {
-          String[] parts = request.split(" ");
-          response = "FAIL";
-          if (parts.length == 2) {
-            response = bank.changeLogInPassword(customer.getKey(), parts[1]);
+        } else if ("CHANGEPW".equals(command)) {
+          // rejects anything of the form command|arg1|+
+          if (args.contains("|")) {
+            response = "FAIL";
+          } else {
+            response = bank.changeLogInPassword(customer.getKey(), args);
           }
-        } else if (request.equals("LOGOUT")) {
+        } else if ("LOGOUT".equals(command)) {
           // Log out handling, upon logout bank terminal notified, customer session ends, then logout repsonse sent to UI (cannot cause crash if LOGOUT attempted while no customer in event of client/server error)
           if (customer != null) {
             System.out.println("User Logout: " + customer.getKey());
@@ -82,7 +89,7 @@ public class NewBankClientHandler extends Thread {
           if (customer == null) {
             response = "Please login first";
           } else {
-            response = bank.processRequest(customer, request);
+            response = bank.processRequest(customer, command, args);
           }
         }   
         // send response back to bank terminal

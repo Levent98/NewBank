@@ -233,7 +233,7 @@ class TransactionManagerTest {
         NewBank bank = NewBank.getBank();
         CustomerID customer = new CustomerID("John");
 
-        String result = bank.processRequest(customer, "PAY Checking Christina 1000");
+        String result = bank.processRequest(customer, "PAY", "Checking Christina 1000");
         assertEquals("FAIL - Insufficient balance", result);
     }
 
@@ -242,7 +242,7 @@ class TransactionManagerTest {
         NewBank bank = NewBank.getBank();
         CustomerID customer = new CustomerID("Bhagy");
 
-        String result = bank.processRequest(customer, "PAY Main FakeUser 100");
+        String result = bank.processRequest(customer, "PAY", "Main FakeUser 100");
         assertEquals("FAIL - Account name not valid", result);
     }
 

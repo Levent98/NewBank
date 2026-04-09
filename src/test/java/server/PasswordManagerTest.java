@@ -14,11 +14,11 @@ public class PasswordManagerTest {
 
   @BeforeEach
   void setup() {
+    passwords = new PasswordManager();
   }
 
   @Test
   void testCheckPassword() {
-    passwords = PasswordManager.getPasswordManager();
     String username = "alice";
     String password = "secret123456789";
 
@@ -33,7 +33,6 @@ public class PasswordManagerTest {
 
   @Test
   void testChangePassword() {
-    passwords = PasswordManager.getPasswordManager();
     String username = "alice";
     String password1 = "secret123456789";
     String password2 = "secret456789123";
@@ -50,7 +49,6 @@ public class PasswordManagerTest {
 
   @Test
   void testLockUser() {
-    passwords = PasswordManager.getPasswordManager();
     String username = "alice";
     String password = "secret123456789";
 
@@ -68,7 +66,6 @@ public class PasswordManagerTest {
 
   @Test
   void testDelUser() {
-    passwords = PasswordManager.getPasswordManager();
     String username = "alice";
     String password = "secret123456789";
 
@@ -86,7 +83,6 @@ public class PasswordManagerTest {
 
   @Test
   void hasUserName() {
-    passwords = PasswordManager.getPasswordManager();
     String username1 = "alice";
     String password1 = "secret123456789";
     String username2 = "john";
@@ -100,6 +96,6 @@ public class PasswordManagerTest {
     assertTrue(passwords.hasUserName(username2), "Checking if true for a record with a null value (locked)");
   }
 
-  // Add more specific tests for hashing details if you want!
+  // Add more specific tests if needed
 
 }
