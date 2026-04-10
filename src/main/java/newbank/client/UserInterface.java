@@ -46,10 +46,10 @@ public class UserInterface {
         try {
           //ask for username
           System.out.println("Enter Username ");
-          username =  userInput.readLine();
+          username =  userInput.readLine().trim();
           //ask for password
           System.out.println("Enter Password ");
-          password = userInput.readLine();
+          password = userInput.readLine().trim();
 
           // Input validation "|" will be used for messages
           if (username.isEmpty() || username.contains("|") || password.isEmpty() || password.contains("|")) {
