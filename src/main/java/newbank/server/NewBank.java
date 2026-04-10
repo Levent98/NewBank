@@ -140,9 +140,18 @@ public class NewBank {
       }
   }
 
-  // Adapter to new client-server protocol
+  // VIEWALL string builder method
+  // Create a mutable string object to build a final output that can be updated upon each use without creating many string objects and consuming memory/CPU before garbage collection occurs
   private String viewAllCustomers() {
-    return String.join("|", customers.keySet());
+    StringBuilder result = new StringBuilder();
+      for (String customerName : customers.keySet()) {
+        Customer customer = customers.get(customerName);
+        result.append(customerName)
+          .append(": "+"|")
+          .append(customer.accountsToString())
+          .append("|");
+      }
+    return result.toString();
   }
 
   private String showMyAccounts(CustomerID customer) {
