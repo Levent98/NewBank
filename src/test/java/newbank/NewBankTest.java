@@ -14,9 +14,9 @@ public class NewBankTest {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Bhagy");
 
-      bank.processRequest(customer, "NEWACCOUNT Holiday");
+      bank.processRequest(customer, "NEWACCOUNT", "Holiday");
 
-      String result = bank.processRequest(customer, "SHOWMYACCOUNTS");
+      String result = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
 
       assertTrue(result.contains("Holiday"),
                 "SHOWMYACCOUNTS should list the newly created account.");
@@ -27,7 +27,7 @@ public class NewBankTest {
       NewBank bank = NewBank.getBank();
       CustomerID customer = new CustomerID("Bhagy");
 
-      String result = bank.processRequest(customer, "NEWACCOUNT Travel");
+      String result = bank.processRequest(customer, "NEWACCOUNT", "Travel");
 
       assertEquals("SUCCESS - a new account 'Travel' has been created.",result,
                 "System should confirm successful account creation.");
@@ -39,10 +39,10 @@ public class NewBankTest {
       CustomerID customer = new CustomerID("Bhagy");
 
       // First creation succeeds
-      bank.processRequest(customer, "NEWACCOUNT Bills");
+      bank.processRequest(customer, "NEWACCOUNT", "Bills");
 
       // Second creation with same name should fail
-      String result = bank.processRequest(customer, "NEWACCOUNT Bills");
+      String result = bank.processRequest(customer, "NEWACCOUNT", "Bills");
 
       assertEquals("FAIL - an error occured.", result,
                 "System should notify user of an error when account creation fails.");
@@ -55,13 +55,13 @@ public class NewBankTest {
 
       // Create 10 accounts
       for (int i = 1; i < 11; i++) {
-        String result = bank.processRequest(customer, "NEWACCOUNT Acc" + i);
+        String result = bank.processRequest(customer, "NEWACCOUNT", "Acc" + i);
           assertTrue(result.startsWith("SUCCESS"),
                   "Account " + i + " should be created successfully.");
       }
 
       // Attempt the 11th
-      String result = bank.processRequest(customer, "NEWACCOUNT TooMany");
+      String result = bank.processRequest(customer, "NEWACCOUNT", "TooMany");
 
       assertEquals("FAIL - an error occured.", result,
                 "System should prevent creation of more than 10 accounts.");
@@ -74,7 +74,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("Bhagy");
 
-    String result = bank.processRequest(customer, "PAY Main John 100");
+    String result = bank.processRequest(customer, "PAY", "Main John 100");
 
     assertEquals("SUCCESS - you sent John 100.00", result,
             "System should confirm successful payment.");
@@ -85,7 +85,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("Bhagy");
 
-    String result = bank.processRequest(customer, "PAY FakeAccount John 100");
+    String result = bank.processRequest(customer, "PAY", "FakeAccount John 100");
 
     assertEquals("FAIL - Account name not valid", result,
             "System should notify user when the source account name is invalid.");
@@ -96,7 +96,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("Bhagy");
 
-    String result = bank.processRequest(customer, "PAY Main FakeUser 100");
+    String result = bank.processRequest(customer, "PAY", "Main FakeUser 100");
 
     assertEquals("FAIL - Account name not valid", result,
             "System should notify user when the recipient user is invalid.");
@@ -107,7 +107,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("John");
 
-    String result = bank.processRequest(customer, "PAY Checking Christina 1000");
+    String result = bank.processRequest(customer, "PAY", "Checking Christina 1000");
 
     assertEquals("FAIL - Insufficient balance", result,
             "System should notify user when balance is insufficient.");
@@ -118,7 +118,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("John");
 
-    String result = bank.processRequest(customer, "PAY Checking John");
+    String result = bank.processRequest(customer, "PAY", "Checking John");
 
     assertEquals("ERROR: PAY command must be in the format \"PAY FROMACCOUNT PAYEE AMOUNT\"", result,
         "System should notify user when PAY command format is invalid.");
@@ -129,7 +129,7 @@ public class NewBankTest {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("Bhagy");
 
-    String result = bank.processRequest(customer, "PAY Main John 4000");
+    String result = bank.processRequest(customer, "PAY", "Main John 4000");
 
     assertEquals("FAIL - Max Payment 3500.0", result,
             "System should prevent payments above the maximum allowed amount.");
