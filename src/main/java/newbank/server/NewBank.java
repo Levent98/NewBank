@@ -193,4 +193,46 @@ public class NewBank {
     }
     return transactionManager.payMoney();
   }
+
+  public String testAddMoney(String args) {
+    String[] parts = args.split(" ", 4);
+
+    if (parts.length < 4) {
+      return "ERROR: TESTADDMONEY command must be in the format \"TESTADDMONEY CUSTOMER TOACCOUNT AMOUNT SOURCE\"";
+    }
+
+    String customerName = parts[0];
+    String accountName = parts[1];
+
+    float amount;
+    try {
+      amount = Float.parseFloat(parts[2]);
+    } catch (NumberFormatException e) {
+      return "ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.";
+    }
+
+    String source = parts[3];
+
+    return processAddMoney(new CustomerID(customerName), accountName, amount, source);
+  }
+
+  public String processAddMoney(CustomerID customerID, String accountName, float amount, String source) {
+  if (!customers.containsKey(customerID.getKey())) {
+    return "FAIL - Customer name not valid";
+  }
+
+  Customer customer = customers.get(customerID.getKey());
+
+  TransactionManager transactionManager;
+  try {
+    transactionManager = new TransactionManager(
+        customer,
+        "ADDMONEY " + accountName + " " + String.format("%.2f", amount) + " " + source
+    );
+  } catch (Exception e) {
+    return e.getMessage();
+  }
+
+  return transactionManager.addMoney();
+}
 }

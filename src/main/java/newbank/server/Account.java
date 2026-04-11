@@ -43,7 +43,7 @@ public class Account {
    */
   public String deposit(float value, String name){
     // checks to ensure value is positive
-    if(value<0){
+    if(value<=0){
       return null;
     }
     this.balance += value;

@@ -12,6 +12,7 @@ public class TransactionManager {
     private Account toAccount;
     private float value;
     private String payee;
+    private String source;
     private final String request;
     private static final float MAX_PAYMENT = 3500.0f;
 
@@ -29,6 +30,9 @@ public class TransactionManager {
         }
         else if(request.startsWith("PAY")){
             checkPayCommand();
+        }
+        else if(request.startsWith("ADDMONEY")){
+            checkAddMoneyCommand();
         }
         else{
             throw new Exception("ERROR: Incorrect command");
@@ -195,6 +199,58 @@ public class TransactionManager {
         return "FAIL - Insufficient balance";
     }
 
-  }
+    }
+
+    private void checkAddMoneyCommand() throws Exception {
+    String to;
+    StringTokenizer st = new StringTokenizer(request, " ");
+
+    st.nextToken();
+
+    String formatErrorMessage =
+        "ERROR: ADDMONEY command must be in the format \"ADDMONEY TOACCOUNT AMOUNT SOURCE\"";
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+    to = parseAccount(st);
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+    String token = st.nextToken();
+
+    if (!token.matches("\\d+(\\.\\d{2})?")) {
+        throw new Exception("ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.");
+    }
+    this.value = Float.parseFloat(token);
+
+    if (value <= 0) {
+        throw new Exception("FAIL - Amount must be greater than zero");
+    }
+
+    if (!st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+    this.source = parseAccount(st);
+
+    if (st.hasMoreTokens()) {
+        throw new Exception(formatErrorMessage);
+    }
+
+    this.toAccount = customer.getAccount(to);
+    if (toAccount == null) {
+        throw new Exception("FAIL - Account name not valid");
+    }
+    }
+    public String addMoney() {
+        if (toAccount.deposit(value, source) != null) {
+            return "SUCCESS - " + String.format("%.2f", value)
+                + " added to " + toAccount.getName();
+        }
+        else{
+            return "FAIL - Inbound payment could not be processed";
+        }
+    }
     
 }
