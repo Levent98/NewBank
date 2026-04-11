@@ -3,6 +3,7 @@ package newbank.server;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.List;
 //import java.util.HashMap.*;
 import java.util.StringTokenizer;
 
@@ -16,6 +17,8 @@ public class NewBank {
   private final PasswordManager customerPasswords;
   // US09 Added an employee instance
   private final PasswordManager employeePasswords;
+  // Transaction ledger
+  private final TransactionLedger transactionLedger = new TransactionLedger();
   
   private NewBank() {
     customers = new HashMap<>();
@@ -30,6 +33,7 @@ public class NewBank {
     bhagy.addAccount(new Account("Main", 1000.0f));
     bhagy.addAccount(new Account("Main2", 1000.0f));
     bhagy.addAccount(new Account("Main3", 1000.0f));
+    bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -40,6 +44,10 @@ public class NewBank {
 
     Customer john = new Customer();
     john.addAccount(new Account("Checking", 250.0f));
+    john.addAccount(new Account("Saving", 900.0f));
+    john.addAccount(new Account("Main", 60.0f));
+    john.addAccount(new Account("Main2", 60.0f));
+    john.addAccount(new Account("Main3", 60.0f));
     customers.put("John", john);
     customerPasswords.setUnchecked("John", "john");
 
@@ -125,6 +133,9 @@ public class NewBank {
         case "VIEWALL":
           if (!isEmployee) return "Command not recognised";
           return viewAllCustomers();
+        case "VIEWTRANSACTIONS":
+          if (!isEmployee) return "Command not recognised";
+          return viewAllTransactions();  
         case "SHOWMYACCOUNTS":
           if (!isCustomer) return "Command not recognised";
           return showMyAccounts(customer);
@@ -142,8 +153,8 @@ public class NewBank {
       }
   }
 
-  // VIEWALL customer string builder method
-  // Creates a mutable string object to build a final output that can be updated upon each use without creating multiple string objects and consuming memory/CPU before garbage collection occurs
+  // VIEWALL string builder method
+  // Create a mutable string object to build a final output that can be updated upon each use without creating many string objects and consuming memory/CPU before garbage collection occurs
   private String viewAllCustomers() {
     StringBuilder result = new StringBuilder();
       for (String customerName : customers.keySet()) {
@@ -155,6 +166,27 @@ public class NewBank {
       }
     return result.toString();
   }
+
+  // Admin use VIEWTRANSACTION command method
+  private String viewAllTransactions() {
+    StringBuilder result = new StringBuilder();
+    HashMap<String, List<Transaction>> all = transactionLedger.getAllTransactions();
+    if (all.isEmpty()) {
+        return "No transactions recorded";
+    }
+    for (String accountName : all.keySet()) {
+        result.append(accountName).append(": ");
+        for (Transaction tx : all.get(accountName)) {
+            result.append(tx.getReference())
+                  .append(" £")
+                  .append(String.format("%.2f", tx.getValue()))
+                  .append(" ");
+        }
+        result.append("|");
+    }
+    return result.toString();
+  }
+  //
 
   private String showMyAccounts(CustomerID customer) {
     return (customers.get(customer.getKey())).accountsToString();
@@ -202,6 +234,20 @@ public class NewBank {
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.payMoney();
+    String result = transactionManager.payMoney();
+  
+    if (result.startsWith("SUCCESS")) {
+      Transaction tx = new Transaction(
+        "PAY " + args,
+        transactionManager.getValue(),
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      // use FROM account name
+      String accountName = transactionManager.getFromAccountName();
+
+      transactionLedger.record(accountName, tx);
+    }
+    return result;
   }
 }

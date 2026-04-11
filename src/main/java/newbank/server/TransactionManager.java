@@ -196,5 +196,16 @@ public class TransactionManager {
     }
 
   }
+  public float getValue() {
+    return value;
+}
+
+public String getFromAccountName() {
+    return (fromAccount != null) ? fromAccount.getName() : null;
+}
+
+public String getToAccountName() {
+    return (toAccount != null) ? toAccount.getName() : null;
+}
     
 }

@@ -153,6 +153,8 @@ public class UserInterface {
     System.out.println("\nMenu Options:");
     if (isEmployee) {
       System.out.println("\nVIEWALL");
+      System.out.println("\nVIEWTRANSACTIONS");
+
     } else {
       System.out.println("\nSHOWMYACCOUNTS");
       System.out.println("NEWACCOUNT <name>");
