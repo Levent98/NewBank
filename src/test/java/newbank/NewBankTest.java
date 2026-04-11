@@ -135,6 +135,44 @@ public class NewBankTest {
             "System should prevent payments above the maximum allowed amount.");
   }
   
+    // US08 VIEWALL tests
+    @Test
+  void processRequest_ViewAll_AsAdmin_ReturnsCustomerList() {
+    NewBank bank = NewBank.getBank();
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWALL", "");
+
+    assertTrue(result.contains("John"),
+            "VIEWALL should include customer John.");
+    assertTrue(result.contains("Christina"),
+            "VIEWALL should include customer Christina.");
+    assertTrue(result.contains("Bhagy"),
+            "VIEWALL should include customer Bhagy.");
+  }
+  // customer cannot access VIEWALL
+  @Test
+  void processRequest_ViewAll_AsCustomer_ReturnsError() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = bank.checkLogInDetails("John", "john");
+
+    String result = bank.processRequest(customer, "VIEWALL", "");
+
+    assertEquals("Command not recognised", result,
+            "Customers should not be allowed to use VIEWALL.");
+  }
+
+  // null user check
+  @Test
+  void processRequest_ViewAll_NoUser_ReturnsError() {
+    NewBank bank = NewBank.getBank();
+
+    String result = bank.processRequest(null, "VIEWALL", "");
+
+    assertEquals("Command not recognised", result,
+            "Unauthenticated users should not be allowed to use VIEWALL.");
+  }
 }
 
 
