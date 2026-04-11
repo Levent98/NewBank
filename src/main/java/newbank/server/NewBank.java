@@ -2,6 +2,7 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 //import java.util.HashMap.*;
 import java.util.StringTokenizer;
@@ -28,6 +29,7 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
+    bhagy.addAccount(new Account("Credit Card", -100.0f));
     bhagy.addAccount(new Account("Main2", 1000.0f));
     bhagy.addAccount(new Account("Main3", 1000.0f));
     customers.put("Bhagy", bhagy);
@@ -120,26 +122,29 @@ public class NewBank {
         return "Command not recognised";
       }
 
-      // CLI action based on user input - this is where we could add further commands
-      switch (command) {
-        case "VIEWALL":
-          if (!isEmployee) return "Command not recognised";
-          return viewAllCustomers();
-        case "SHOWMYACCOUNTS":
-          if (!isCustomer) return "Command not recognised";
-          return showMyAccounts(customer);
-        case "NEWACCOUNT":
-          if (!isCustomer) return "Command not recognised";
-          return handleNewAccount(customer, args);
-        case "MOVE":
-          if (!isCustomer) return "Command not recognised";
-          return moveMoney(customer, args);
-        case "PAY":
-          if (!isCustomer) return "Command not recognised";
-          return payMoney(customer, args);
-        default:
-          return "Command not recognised";
-      }
+    // CLI action based on user input - this is where we could add further commands
+    switch (command) {
+      case "VIEWALL":
+        if (!isEmployee) return "Command not recognised";
+        return viewAllCustomers();
+      case "SHOWMYACCOUNTS":
+        if (!isCustomer) return "Command not recognised";
+        return showMyAccounts(customer);
+      case "NEWACCOUNT":
+        if (!isCustomer) return "Command not recognised";
+        return handleNewAccount(customer, args);
+      case "MOVE":
+        if (!isCustomer) return "Command not recognised";
+        return moveMoney(customer, args);
+      case "PAY":
+        if (!isCustomer) return "Command not recognised";
+        return payMoney(customer, args);
+      case "DEACTIVATE":
+        if(!isCustomer) return "Command not recognised";
+        return deactivateAccount(customer, args);
+      default:
+        return "Command not recognised";
+    }
   }
 
   // VIEWALL customer string builder method
@@ -203,5 +208,49 @@ public class NewBank {
       return e.getMessage();
     }
     return transactionManager.payMoney();
+  }
+
+  private String deactivateAccount(CustomerID customerID, String args) {
+    // Get customer
+    Customer customer = customers.get(customerID.getKey());
+    // Get account
+    // getAccounts() used instead of getAccount() in order to find index of account
+    ArrayList<Account> accounts = customer.getAccounts();
+    Account account = null;
+    int i;
+    for(i = 0; i<accounts.size(); i++){
+      account = accounts.get(i);
+      if(account.getName().equals(args.trim())) {
+        break;
+      }
+    }
+    // Return failure string if account does not exist
+    if (i==accounts.size()){
+      return "FAILURE - " + args.trim() + " does not exist";
+    }
+
+    // Check that the account does not have negative balance
+    if(account.getBalance()<0){
+      return "FAILURE - " + args.trim() + " has negative balance";
+    }
+
+    // Check if the account has balance to be transferred to next primary account
+    if(account.getBalance()>0){
+      // Return failure string if account is the only one
+      if(accounts.size()==1){
+        return "FAILURE - " + args.trim() + " is the only active account, with a balance of " + account.getBalance() + ". Balance must be 0.";
+      }
+      // If the first account transfer to second, else first
+      if(i==0){
+        accounts.get(1).deposit(account.getBalance(),"Move from " + args.trim());
+      }
+      else{
+        accounts.get(0).deposit(account.getBalance(),"Move from " + args.trim());
+      }
+    }
+    // remove account from accounts and add to deactivatedAccounts
+    accounts.remove(i);
+    customer.getDeactivatedAccounts().add(account);
+    return "SUCCESS - " + args.trim() + " deactivated";
   }
 }
