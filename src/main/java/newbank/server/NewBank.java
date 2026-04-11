@@ -137,6 +137,9 @@ public class NewBank {
           return payMoney(customer, args);
         default:
           return "Command not recognised";
+        case "TESTADDMONEY":
+          if (!isEmployee) return "Command not recognised";
+          return testAddMoney(args);
       }
   }
 
