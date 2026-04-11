@@ -153,7 +153,7 @@ public class UserInterface {
     System.out.println("\nMenu Options:");
     if (isEmployee) {
       System.out.println("\nVIEWALL");
-      System.out.println("TESTADDMONEY <payee> <Username> <amount> <source>");
+      System.out.println("TESTADDMONEY <Username> <toaccount> <amount> <source>");
     } else {
       System.out.println("\nSHOWMYACCOUNTS");
       System.out.println("NEWACCOUNT <name>");
