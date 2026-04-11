@@ -28,6 +28,8 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
+    bhagy.addAccount(new Account("Main2", 1000.0f));
+    bhagy.addAccount(new Account("Main3", 1000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -140,8 +142,8 @@ public class NewBank {
       }
   }
 
-  // VIEWALL string builder method
-  // Create a mutable string object to build a final output that can be updated upon each use without creating many string objects and consuming memory/CPU before garbage collection occurs
+  // VIEWALL customer string builder method
+  // Creates a mutable string object to build a final output that can be updated upon each use without creating multiple string objects and consuming memory/CPU before garbage collection occurs
   private String viewAllCustomers() {
     StringBuilder result = new StringBuilder();
       for (String customerName : customers.keySet()) {
