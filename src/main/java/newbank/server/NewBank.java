@@ -31,8 +31,7 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
-    bhagy.addAccount(new Account("Main2", 1000.0f));
-    bhagy.addAccount(new Account("Main3", 1000.0f));
+    bhagy.addAccount(new Account("Saving", 1000.0f));
     bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
@@ -46,8 +45,6 @@ public class NewBank {
     john.addAccount(new Account("Checking", 250.0f));
     john.addAccount(new Account("Saving", 900.0f));
     john.addAccount(new Account("Main", 60.0f));
-    john.addAccount(new Account("Main2", 60.0f));
-    john.addAccount(new Account("Main3", 60.0f));
     customers.put("John", john);
     customerPasswords.setUnchecked("John", "john");
 
