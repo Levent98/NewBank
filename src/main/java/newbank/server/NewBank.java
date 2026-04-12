@@ -26,6 +26,11 @@ public class NewBank {
     addTestData();
   }
 
+  public void reset() {
+    customers.clear();
+    addTestData();
+  }
+
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
@@ -211,6 +216,10 @@ public class NewBank {
   }
 
   private String deactivateAccount(CustomerID customerID, String args) {
+    if(args.isEmpty() || args==null){
+      return "FAILURE - Provide account to deactivate";
+    }
+
     // Get customer
     Customer customer = customers.get(customerID.getKey());
     // Get account
@@ -234,6 +243,7 @@ public class NewBank {
       return "FAILURE - " + args.trim() + " has negative balance";
     }
 
+    String balanceTransferMessage = "";
     // Check if the account has balance to be transferred to next primary account
     if(account.getBalance()>0){
       // Return failure string if account is the only one
@@ -243,14 +253,16 @@ public class NewBank {
       // If the first account transfer to second, else first
       if(i==0){
         accounts.get(1).deposit(account.getBalance(),"Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance() + " moved to " + accounts.get(1).getName();
       }
       else{
         accounts.get(0).deposit(account.getBalance(),"Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance() + " moved to " + accounts.get(0).getName();
       }
     }
     // remove account from accounts and add to deactivatedAccounts
     accounts.remove(i);
     customer.getDeactivatedAccounts().add(account);
-    return "SUCCESS - " + args.trim() + " deactivated";
+    return "SUCCESS - " + args.trim() + " deactivated." + balanceTransferMessage;
   }
 }

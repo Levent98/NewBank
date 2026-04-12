@@ -1,6 +1,7 @@
 package newbank;
 
 import newbank.server.Customer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import newbank.server.CustomerID;
@@ -9,6 +10,11 @@ import newbank.server.NewBank;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class NewBankTest {
+
+  @BeforeEach
+  void reset() {
+    NewBank.getBank().reset();
+  }
 
   @Test
     void addAccount_NewValidAccount_IsVisibleInList() {
@@ -197,23 +203,23 @@ void processRequest_DeactivateAccount(){
 
     // 3 - One account without balance
     bank.processRequest(customerID, "NEWACCOUNT", "Account 1");
-    assertEquals("SUCCESS - Account 1 deactivated",bank.processRequest(customerID,"DEACTIVATE","Account 1"));
+    assertEquals("SUCCESS - Account 1 deactivated.",bank.processRequest(customerID,"DEACTIVATE","Account 1"));
 
     // 4 - More than 1 account + with balance
     // deactivate Main and transfer to Account 2
     bank.processRequest(customerID, "NEWACCOUNT", "Account 2");
-    assertEquals("SUCCESS - Main deactivated",bank.processRequest(customerID,"DEACTIVATE","Main"));
+    assertEquals("SUCCESS - Main deactivated. Remaining balance of 900.0 moved to Account 2",bank.processRequest(customerID,"DEACTIVATE","Main"));
     assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
     // deactivate Account 3 and transfer to Account 2
     bank.processRequest(customerID, "NEWACCOUNT", "Account 3");
-    bank.processRequest(customerID, "MOVE", "900 \"Account 2\" \"Account 3");
-    assertEquals("SUCCESS - Account 3 deactivated",bank.processRequest(customerID,"DEACTIVATE","Account 3"));
+    bank.processRequest(customerID, "MOVE", "900 \"Account 2\" \"Account 3\"");
+    assertEquals("SUCCESS - Account 3 deactivated. Remaining balance of 900.0 moved to Account 2",bank.processRequest(customerID,"DEACTIVATE","Account 3"));
     assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
 
     // 5 - More than 1 account + without balance
     // create new account
     bank.processRequest(customerID, "NEWACCOUNT", "Account 4");
-    assertEquals("SUCCESS - Account 4 deactivated",bank.processRequest(customerID,"DEACTIVATE","Account 4"));
+    assertEquals("SUCCESS - Account 4 deactivated.",bank.processRequest(customerID,"DEACTIVATE","Account 4"));
     assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
 
     // 6 - Account does not exist
