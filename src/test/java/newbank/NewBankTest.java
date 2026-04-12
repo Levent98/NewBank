@@ -227,7 +227,7 @@ public class NewBankTest {
 
     CustomerID customer = new CustomerID("John");
 
-    bank.processRequest(customer, "MOVE", "5 Main Main2");
+    bank.processRequest(customer, "MOVE", "5 Main Checking");
 
     CustomerID admin = bank.checkLogInDetails("Admin", "admin");
 

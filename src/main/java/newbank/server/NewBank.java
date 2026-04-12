@@ -31,7 +31,6 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
-    bhagy.addAccount(new Account("Saving", 1000.0f));
     bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
