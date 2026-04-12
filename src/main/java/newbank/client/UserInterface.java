@@ -59,7 +59,7 @@ public class UserInterface {
 
           //start new client connection
           try {
-            client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
+            client = new ExampleClient("localhost", 80); // // ExmapleCLient object establishes server conection
           } catch (IOException e) {
             System.out.println("Error: Unable to establish NewBank server connection - please try again");
             continue;

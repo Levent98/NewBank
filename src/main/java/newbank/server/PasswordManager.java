@@ -21,7 +21,7 @@ public class PasswordManager extends HashMap {
   private static final int SALT = 16;
 
   // password constants
-  private static final int PASSWORD_LENGTH = 14;
+  private static final int PASSWORD_LENGTH = 4;
 
   private static final Argon2Function ARGON2ID =
     Argon2Function.getInstance(MEMORY_KIB, ITERATIONS, PARALLELISATION, OUTPUT_LENGTH, Argon2.ID, VERSION);
@@ -39,10 +39,10 @@ public class PasswordManager extends HashMap {
     // The first String is the customer ID, the second the password
     Hash bhagyHash = Password.hash("bhagy").addRandomSalt(SALT).with(ARGON2ID);
     passwords.put("Bhagy", bhagyHash.getResult());
-    
+
     Hash christinaHash = Password.hash("christina").addRandomSalt(SALT).with(ARGON2ID);
     passwords.put("Christina", christinaHash.getResult());
-    
+
     Hash johnHash = Password.hash("john").addRandomSalt(SALT).with(ARGON2ID);
     passwords.put("John", johnHash.getResult());
   }

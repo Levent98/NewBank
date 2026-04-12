@@ -2,12 +2,15 @@ package newbank.server;
 
 public class CustomerID {
 
-  public enum Role { CUSTOMER, EMPLOYEE }
-
   private String key;
   private Role role;
-  
-  // defaulting to CUSTOMER so existing code should continue to run
+
+  public enum Role { CUSTOMER, EMPLOYEE }
+
+  public String getName() {
+    return key;
+  }
+
   public CustomerID(String key) {
     this(key, Role.CUSTOMER);
   }
@@ -24,7 +27,7 @@ public class CustomerID {
   public boolean isEmployee() {
     return role == Role.EMPLOYEE;
   }
-  
+
   public String getKey() {
     return key;
   }
