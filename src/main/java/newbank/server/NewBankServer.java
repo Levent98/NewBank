@@ -23,6 +23,13 @@ public class NewBankServer extends Thread {
       while(true) {
         Socket s = server.accept();
 
+        // --- TRACE LOGS START ---
+        System.out.println("\n[TRAFFIC REPORT]");
+        System.out.println("Connection received from: " + s.getRemoteSocketAddress());
+        System.out.println("Handled by Server Port: " + server.getLocalPort());
+        System.out.println("--------------------------");
+        // --- TRACE LOGS END ---
+
         threadPool.execute(new NewBankClientHandler(s));
       }
     } catch (IOException e) {
@@ -31,7 +38,6 @@ public class NewBankServer extends Thread {
       shutdownServer();
     }
   }
-
   private void shutdownServer() {
     try {
       if (server != null) server.close();

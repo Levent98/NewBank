@@ -45,7 +45,7 @@ public class Customer {
     return true;
   }
 
- 
+
   public Account getAccount(String accountName) {
     for (Account account : accounts) {
       if (account.getName().equals(accountName)) {

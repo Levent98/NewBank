@@ -6,10 +6,12 @@ public class NewBank {
 
   private static NewBank bank = null;
   private HashMap<String, Customer> customers;
+  private DatabaseHandler db;
   private PasswordManager passwordManager;
 
   private NewBank() {
     customers = new HashMap<>();
+    this.db = new DatabaseHandler(); // Ortak veritabanı bağlantısı
     this.passwordManager = new PasswordManager();
     addTestData();
   }
@@ -22,23 +24,33 @@ public class NewBank {
   }
 
   private void addTestData() {
-    customers.put("Bhagy", new Customer("Bhagy"));
-    customers.put("John", new Customer("John"));
+    // Test verilerini veritabanına eklemeyi deneyelim
+    db.addUser("Bhagy", "bhagy");
   }
-
 
   public synchronized String handleLogin(String username, String password, boolean isNewUser) {
     if (isNewUser) {
+      // Önce şifre kurallarına (PasswordManager) bakalım
       String result = passwordManager.set(username, password);
       if (result.startsWith("SUCCESS")) {
-        if (!customers.containsKey(username)) {
-          customers.put(username, new Customer(username));
+        // Şifre uygunsa veritabanına yazalım
+        if (db.addUser(username, password)) {
+          if (!customers.containsKey(username)) {
+            customers.put(username, new Customer(username));
+          }
+          return "SUCCESS";
+        } else {
+          return "ERROR: Username already exists";
         }
-        return "SUCCESS";
       }
       return result;
     } else {
-      if (passwordManager.check(username, password)) {
+      // Login işlemi: Veritabanından şifreyi çek ve kontrol et
+      String storedPassword = db.getPassword(username);
+      if (storedPassword != null && storedPassword.equals(password)) {
+        if (!customers.containsKey(username)) {
+          customers.put(username, new Customer(username));
+        }
         return "SUCCESS";
       }
       return "FAIL";
