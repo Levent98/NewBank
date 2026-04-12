@@ -153,13 +153,13 @@ public class UserInterface {
     System.out.println("\nMenu Options:");
     if (isEmployee) {
       System.out.println("\nVIEWALL");
-      System.out.println("\nVIEWTRANSACTIONS");
+      System.out.println("VIEWTRANSACTIONS");
 
     } else {
       System.out.println("\nSHOWMYACCOUNTS");
       System.out.println("NEWACCOUNT <name>");
       System.out.println("MOVE <amount> <from> <to>");
-      System.out.println("PAY <person> <amount>");
+      System.out.println("PAY <from account> <payee name> <amount>");
     }
     System.out.println("LOGOUT");
     System.out.println("EXIT");

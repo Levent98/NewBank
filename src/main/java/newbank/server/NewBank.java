@@ -180,7 +180,7 @@ public class NewBank {
             result.append(tx.getReference())
                   .append(" £")
                   .append(String.format("%.2f", tx.getValue()))
-                  .append(" ");
+                  .append("|");
         }
         result.append("|");
     }
@@ -221,8 +221,39 @@ public class NewBank {
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.moveMoney();
+    String result = transactionManager.moveMoney();
+  
+    if (result.startsWith("SUCCESS")) {
+
+    String from = transactionManager.getFromAccountName();
+    String to = transactionManager.getToAccountName();
+    float value = transactionManager.getValue();
+
+    // Debit (from account)
+    Transaction txOut = new Transaction(
+      "MOVE OUT",
+      -value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    // Credit (to account)
+    Transaction txIn = new Transaction(
+      "MOVE IN",
+      value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    String fromKey = customerID.getKey() + ":" + from;
+    String toKey = customerID.getKey() + ":" + to;
+
+    transactionLedger.record(fromKey, txOut);
+    transactionLedger.record(toKey, txIn);
   }
+
+  return result;
+}
+  
+  ////
 
   public String payMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
@@ -244,9 +275,8 @@ public class NewBank {
       );
 
       // use FROM account name
-      String accountName = transactionManager.getFromAccountName();
-
-      transactionLedger.record(accountName, tx);
+      String key = customerID.getKey() + ":" + transactionManager.getFromAccountName();
+      transactionLedger.record(key, tx);
     }
     return result;
   }
