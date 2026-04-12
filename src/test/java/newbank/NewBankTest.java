@@ -173,6 +173,69 @@ public class NewBankTest {
     assertEquals("Command not recognised", result,
             "Unauthenticated users should not be allowed to use VIEWALL.");
   }
+
+  // Admin VIEWTRANSACTIONS testing
+  // Admin login can view transactions
+  @Test
+  void processRequest_ViewTransactions_AsAdmin_ReturnsData() {
+    NewBank bank = NewBank.getBank();
+
+    // Perform a transaction first
+    CustomerID customer = new CustomerID("John");
+    bank.processRequest(customer, "MOVE", "10 Main Main2");
+
+    // Login as admin
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertFalse(result.equals("No transactions recorded"),
+            "Admin should see recorded transactions.");
+  }
+  // Customer cannot access VIEWTRANSACITONS
+  @Test
+  void processRequest_ViewTransactions_AsCustomer_ReturnsError() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    String result = bank.processRequest(customer, "VIEWTRANSACTIONS", "");
+
+    assertEquals("Command not recognised", result,
+            "Customers should not be able to view all transactions.");
+  }
+  // PAY creates a transaction
+  @Test
+  void processRequest_Pay_CreatesTransactionInLedger() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    bank.processRequest(customer, "PAY", "Main Bhagy 5.00");
+
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertTrue(result.contains("PAY"),
+            "Ledger should contain PAY transaction.");
+  }
+  // MOVE creates a transaction
+  @Test
+  void processRequest_Move_CreatesTransactionInLedger() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    bank.processRequest(customer, "MOVE", "5 Main Main2");
+
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertTrue(result.contains("MOVE"),
+            "Ledger should contain MOVE transaction.");
+  }
 }
 
 

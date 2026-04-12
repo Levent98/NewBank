@@ -175,12 +175,14 @@ public class NewBank {
         return "No transactions recorded";
     }
     for (String accountName : all.keySet()) {
-        result.append(accountName).append(": ");
+        result.append(accountName).append(":|");
         for (Transaction tx : all.get(accountName)) {
-            result.append(tx.getReference())
-                  .append(" £")
-                  .append(String.format("%.2f", tx.getValue()))
-                  .append("|");
+            result.append(tx.getDate())
+              .append(" - ")
+              .append(tx.getReference())
+              .append(" £")
+              .append(String.format("%.2f", tx.getValue()))
+              .append("|");
         }
         result.append("|");
     }
@@ -269,7 +271,7 @@ public class NewBank {
   
     if (result.startsWith("SUCCESS")) {
       Transaction tx = new Transaction(
-        "PAY " + args,
+        "PAY to " + args.split(" ")[1],
         transactionManager.getValue(),
         new java.sql.Date(System.currentTimeMillis())
       );
