@@ -7,38 +7,47 @@ public class Customer {
   private String fullName;
   private ArrayList<Account> accounts;
 
+
+  public Customer(String fullName) {
+    this.fullName = fullName;
+    this.customerID = new CustomerID(fullName);
+    this.accounts = new ArrayList<>();
+  }
+
+
   public Customer() {
-    accounts = new ArrayList<>();
+    this.accounts = new ArrayList<>();
+  }
+
+
+  public String getName() {
+    return fullName;
   }
 
   public String accountsToString() {
-    String s = "";
-    for(Account a : accounts) {
-      s += a.toString();
+    StringBuilder s = new StringBuilder();
+    for (Account a : accounts) {
+      s.append(a.toString()).append("\n");
     }
-    return s;
+    return s.length() == 0 ? "No accounts found." : s.toString();
   }
 
   public void addAccount(Account account) {
     accounts.add(account);
   }
-  // Adds the new account as long as there are no more than 10 accounts already setup
+
   public boolean addAccount(String name) {
+    if (accounts.size() >= 10) return false;
     for (Account a : accounts) {
-      if (a.getName().equalsIgnoreCase(name)) {
-        return false;
-      }
-      if (accounts.size()>10) {
-        return false;
-      }
+      if (a.getName().equalsIgnoreCase(name)) return false;
     }
-    // Default opening balance set to 0.0
     accounts.add(new Account(name, 0.0f));
     return true;
   }
 
-  public Account getAccount(String accountName){
-    for(Account account : accounts){
+ 
+  public Account getAccount(String accountName) {
+    for (Account account : accounts) {
       if (account.getName().equals(accountName)) {
         return account;
       }
@@ -48,8 +57,8 @@ public class Customer {
 
   public Account getFirstAccount() {
     if (accounts.isEmpty()) {
-        return null;
+      return null;
     }
     return accounts.get(0);
-  } 
+  }
 }
