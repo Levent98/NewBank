@@ -2,6 +2,7 @@ package newbank.server;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 //import java.util.HashMap.*;
@@ -19,7 +20,7 @@ public class NewBank {
   private final PasswordManager employeePasswords;
   // Transaction ledger
   private final TransactionLedger transactionLedger = new TransactionLedger();
-  
+
   private NewBank() {
     customers = new HashMap<>();
     // US01 and 09 Added a PasswordManager object to store passwords
@@ -28,10 +29,16 @@ public class NewBank {
     addTestData();
   }
 
+  public void reset() {
+    customers.clear();
+    addTestData();
+  }
+
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
     bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
+    bhagy.addAccount(new Account("Credit Card", -100.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -131,7 +138,7 @@ public class NewBank {
           return viewAllCustomers();
         case "VIEWTRANSACTIONS":
           if (!isEmployee) return "Command not recognised";
-          return viewAllTransactions();  
+          return viewAllTransactions();
         case "SHOWMYACCOUNTS":
           if (!isCustomer) return "Command not recognised";
           return showMyAccounts(customer);
@@ -144,6 +151,9 @@ public class NewBank {
         case "PAY":
           if (!isCustomer) return "Command not recognised";
           return payMoney(customer, args);
+        case "DEACTIVATE":
+          if(!isCustomer) return "Command not recognised";
+          return deactivateAccount(customer, args);
         default:
           return "Command not recognised";
       }
@@ -184,8 +194,8 @@ public class NewBank {
     }
     return result.toString();
   }
-  //
 
+  //
   private String showMyAccounts(CustomerID customer) {
     return (customers.get(customer.getKey())).accountsToString();
   }
@@ -220,7 +230,7 @@ public class NewBank {
       return e.getMessage();
     }
     String result = transactionManager.moveMoney();
-  
+
     if (result.startsWith("SUCCESS")) {
 
     String from = transactionManager.getFromAccountName();
@@ -250,9 +260,8 @@ public class NewBank {
 
   return result;
 }
-  
-  ////
 
+  ////
   public String payMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
@@ -264,7 +273,7 @@ public class NewBank {
       return e.getMessage();
     }
     String result = transactionManager.payMoney();
-  
+
     if (result.startsWith("SUCCESS")) {
       float value = transactionManager.getValue();
         String fromAccount = transactionManager.getFromAccountName();
@@ -295,5 +304,56 @@ public class NewBank {
       transactionLedger.record(toKey, txIn);
     }
     return result;
+  }
+
+  private String deactivateAccount(CustomerID customerID, String args) {
+    if(args.isEmpty() || args==null){
+      return "FAILURE - Provide account to deactivate";
+    }
+
+    // Get customer
+    Customer customer = customers.get(customerID.getKey());
+    // Get account
+    // getAccounts() used instead of getAccount() in order to find index of account
+    ArrayList<Account> accounts = customer.getAccounts();
+    Account account = null;
+    int i;
+    for(i = 0; i<accounts.size(); i++){
+      account = accounts.get(i);
+      if(account.getName().equals(args.trim())) {
+        break;
+      }
+    }
+    // Return failure string if account does not exist
+    if (i==accounts.size()){
+      return "FAILURE - " + args.trim() + " does not exist";
+    }
+
+    // Check that the account does not have negative balance
+    if(account.getBalance()<0){
+      return "FAILURE - " + args.trim() + " has negative balance";
+    }
+
+    String balanceTransferMessage = "";
+    // Check if the account has balance to be transferred to next primary account
+    if(account.getBalance()>0){
+      // Return failure string if account is the only one
+      if(accounts.size()==1){
+        return "FAILURE - " + args.trim() + " is the only active account, with a balance of " + account.getBalance() + ". Balance must be 0.";
+      }
+      // If the first account transfer to second, else first
+      if(i==0){
+        accounts.get(1).deposit(account.getBalance(),"Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance() + " moved to " + accounts.get(1).getName();
+      }
+      else{
+        accounts.get(0).deposit(account.getBalance(),"Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance() + " moved to " + accounts.get(0).getName();
+      }
+    }
+    // remove account from accounts and add to deactivatedAccounts
+    accounts.remove(i);
+    customer.getDeactivatedAccounts().add(account);
+    return "SUCCESS - " + args.trim() + " deactivated." + balanceTransferMessage;
   }
 }

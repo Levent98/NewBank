@@ -7,16 +7,31 @@ public class Customer {
   private String fullName;
   private ArrayList<Account> accounts;
 
+  private ArrayList<Account> deactivatedAccounts;
+
   public Customer() {
     accounts = new ArrayList<>();
+    deactivatedAccounts = new ArrayList<>();
+  }
+
+  public ArrayList<Account> getDeactivatedAccounts() {
+    return deactivatedAccounts;
+  }
+
+  public ArrayList<Account> getAccounts() {
+    return accounts;
   }
 
   public String accountsToString() {
-    String s = "";
+    StringBuilder sb = new StringBuilder();
+
     for(Account a : accounts) {
-      s += a.toString() + "|"; // added | delimiter to add additional accounts to newline in UI display
+      sb.append(a.toString()).append("|");
     }
-    return s;
+    for(Account a : deactivatedAccounts){
+      sb.append(a.getName()).append("- Inactive|");
+    }
+    return sb.toString();
   }
 
   public void addAccount(Account account) {
@@ -25,7 +40,7 @@ public class Customer {
   // Adds the new account as long as there are no more than 10 accounts already setup
   public boolean addAccount(String name) {
     for (Account a : accounts) {
-      if (a.getName().equalsIgnoreCase(name)) {
+      if (a.getName().equals(name)) {
         return false;
       }
       if (accounts.size()>10) {
