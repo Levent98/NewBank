@@ -1,10 +1,8 @@
 package newbank.server;
-
-import java.io.BufferedReader;
-import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 //import java.util.HashMap.*;
-import java.util.StringTokenizer;
+
 
 public class NewBank {
 
@@ -25,9 +23,17 @@ public class NewBank {
     addTestData();
   }
 
+  public void reset() {
+    customers.clear();
+    customerPasswords.clear();
+    employeePasswords.clear();
+    addTestData();
+  }
+
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
+    bhagy.addAccount(new Account("Credit Card", -100.0f));
     bhagy.addAccount(new Account("Main2", 1000.0f));
     bhagy.addAccount(new Account("Main3", 1000.0f));
     customers.put("Bhagy", bhagy);
@@ -137,11 +143,14 @@ public class NewBank {
         case "PAY":
           if (!isCustomer) return "Command not recognised";
           return payMoney(customer, args);
-        default:
-          return "Command not recognised";
+        case "DEACTIVATE":
+          if (!isCustomer) return "Command not recognised";
+          return deactivateAccount(customer, args);
         case "TESTADDMONEY":
           if (!isEmployee) return "Command not recognised";
           return testAddMoney(args);
+        default:
+          return "Command not recognised";
       }
   }
 
@@ -231,22 +240,69 @@ public class NewBank {
   }
 
   public String processAddMoney(CustomerID customerID, String accountName, float amount, String source) {
-  if (!customers.containsKey(customerID.getKey())) {
-    return "FAIL - Customer name not valid";
+    if (!customers.containsKey(customerID.getKey())) {
+      return "FAIL - Customer name not valid";
+    }
+
+    Customer customer = customers.get(customerID.getKey());
+
+    TransactionManager transactionManager;
+    try {
+      transactionManager = new TransactionManager(
+          customer,
+          "ADDMONEY " + accountName + " " + String.format("%.2f", amount) + " " + source
+      );
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+
+    return transactionManager.addMoney();
+  }
+
+  private String deactivateAccount(CustomerID customerID, String args) {
+  if (args == null || args.isEmpty()) {
+    return "FAILURE - Provide account to deactivate";
   }
 
   Customer customer = customers.get(customerID.getKey());
-
-  TransactionManager transactionManager;
-  try {
-    transactionManager = new TransactionManager(
-        customer,
-        "ADDMONEY " + accountName + " " + String.format("%.2f", amount) + " " + source
-    );
-  } catch (Exception e) {
-    return e.getMessage();
+  ArrayList<Account> accounts = customer.getAccounts();
+  Account account = null;
+  int i;
+  for (i = 0; i < accounts.size(); i++) {
+    account = accounts.get(i);
+    if (account.getName().equals(args.trim())) {
+      break;
+    }
   }
 
-  return transactionManager.addMoney();
+  if (i == accounts.size()) {
+    return "FAILURE - " + args.trim() + " does not exist";
+  }
+
+  if (account.getBalance() < 0) {
+    return "FAILURE - " + args.trim() + " has negative balance";
+  }
+
+  String balanceTransferMessage = "";
+  if (account.getBalance() > 0) {
+    if (accounts.size() == 1) {
+      return "FAILURE - " + args.trim() + " is the only active account, with a balance of "
+          + account.getBalance() + ". Balance must be 0.";
+    }
+    if (i == 0) {
+      accounts.get(1).deposit(account.getBalance(), "Move from " + args.trim());
+      balanceTransferMessage = " Remaining balance of " + account.getBalance()
+          + " moved to " + accounts.get(1).getName();
+    } else {
+      accounts.get(0).deposit(account.getBalance(), "Move from " + args.trim());
+      balanceTransferMessage = " Remaining balance of " + account.getBalance()
+          + " moved to " + accounts.get(0).getName();
+    }
+  }
+
+  accounts.remove(i);
+  customer.getDeactivatedAccounts().add(account);
+  return "SUCCESS - " + args.trim() + " deactivated." + balanceTransferMessage;
 }
+
 }
