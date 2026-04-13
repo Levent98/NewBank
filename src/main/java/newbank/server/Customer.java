@@ -6,11 +6,13 @@ public class Customer {
   private CustomerID customerID;
   private String fullName;
   private ArrayList<Account> accounts;
+  private ArrayList<Account> deactivatedAccounts;
 
   public Customer() {
     accounts = new ArrayList<>();
+    deactivatedAccounts = new ArrayList<>();
   }
-
+  
   public String accountsToString() {
     String s = "";
     for(Account a : accounts) {
@@ -52,4 +54,12 @@ public class Customer {
     }
     return accounts.get(0);
   } 
+
+  public ArrayList<Account> getAccounts() {
+    return accounts;
+  }
+
+  public ArrayList<Account> getDeactivatedAccounts() {
+    return deactivatedAccounts;
+  }
 }

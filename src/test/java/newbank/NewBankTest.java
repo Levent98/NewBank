@@ -1,13 +1,20 @@
 package newbank;
 
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.BeforeEach;
 import newbank.server.CustomerID;
 import newbank.server.NewBank;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.BeforeEach;
+
 public class NewBankTest {
+
+  @BeforeEach
+    void reset() {
+      NewBank.getBank().reset();
+    }
 
   @Test
     void addAccount_NewValidAccount_IsVisibleInList() {
@@ -194,6 +201,46 @@ public class NewBankTest {
 
       assertEquals("Command not recognised", result,
               "Customers should not be allowed to run the test add money command.");
+  }
+
+  @Test
+  void processRequest_DeactivateAccount() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customerID = new CustomerID("Bhagy");
+    bank.processRequest(customerID, "DEACTIVATE", "Main2");
+    bank.processRequest(customerID, "DEACTIVATE", "Main3");
+    bank.processRequest(customerID, "PAY", "Main Christina 2000");
+
+    assertEquals("FAILURE - Credit Card has negative balance",
+        bank.processRequest(customerID, "DEACTIVATE", "Credit Card"));
+
+    bank.processRequest(customerID, "MOVE", "100 Main \"Credit Card\"");
+    bank.processRequest(customerID, "DEACTIVATE", "Credit Card");
+    assertEquals("FAILURE - Main is the only active account, with a balance of 900.0. Balance must be 0.",
+        bank.processRequest(customerID, "DEACTIVATE", "Main"));
+
+    bank.processRequest(customerID, "NEWACCOUNT", "Account 1");
+    assertEquals("SUCCESS - Account 1 deactivated.",
+        bank.processRequest(customerID, "DEACTIVATE", "Account 1"));
+
+    bank.processRequest(customerID, "NEWACCOUNT", "Account 2");
+    assertEquals("SUCCESS - Main deactivated. Remaining balance of 900.0 moved to Account 2",
+        bank.processRequest(customerID, "DEACTIVATE", "Main"));
+    assertTrue(bank.processRequest(customerID, "SHOWMYACCOUNTS", "").contains("Account 2: 900.0"));
+
+    bank.processRequest(customerID, "NEWACCOUNT", "Account 3");
+    bank.processRequest(customerID, "MOVE", "900 \"Account 2\" \"Account 3\"");
+    assertEquals("SUCCESS - Account 3 deactivated. Remaining balance of 900.0 moved to Account 2",
+        bank.processRequest(customerID, "DEACTIVATE", "Account 3"));
+    assertTrue(bank.processRequest(customerID, "SHOWMYACCOUNTS", "").contains("Account 2: 900.0"));
+
+    bank.processRequest(customerID, "NEWACCOUNT", "Account 4");
+    assertEquals("SUCCESS - Account 4 deactivated.",
+        bank.processRequest(customerID, "DEACTIVATE", "Account 4"));
+    assertTrue(bank.processRequest(customerID, "SHOWMYACCOUNTS", "").contains("Account 2: 900.0"));
+
+    assertEquals("FAILURE - Account 4 does not exist",
+        bank.processRequest(customerID, "DEACTIVATE", "Account 4"));
   }
 }
 
