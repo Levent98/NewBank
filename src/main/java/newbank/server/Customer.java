@@ -40,7 +40,7 @@ public class Customer {
   // Adds the new account as long as there are no more than 10 accounts already setup
   public boolean addAccount(String name) {
     for (Account a : accounts) {
-      if (a.getName().equalsIgnoreCase(name)) {
+      if (a.getName().equals(name)) {
         return false;
       }
       if (accounts.size()>10) {
