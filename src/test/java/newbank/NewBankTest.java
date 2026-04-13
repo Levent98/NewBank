@@ -173,6 +173,28 @@ public class NewBankTest {
     assertEquals("Command not recognised", result,
             "Unauthenticated users should not be allowed to use VIEWALL.");
   }
+
+  @Test
+  void processRequest_TestAddMoney_AsAdmin_ReturnsSuccess() {
+      NewBank bank = NewBank.getBank();
+      CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+      String result = bank.processRequest(admin, "TESTADDMONEY", "Bhagy Main 250.00 Payroll");
+
+      assertEquals("SUCCESS - 250.00 added to Main", result,
+              "Admin should be able to trigger the test add money backend flow.");
+  }
+
+  @Test
+  void processRequest_TestAddMoney_AsCustomer_ReturnsCommandNotRecognised() {
+      NewBank bank = NewBank.getBank();
+      CustomerID customer = bank.checkLogInDetails("Bhagy", "bhagy");
+
+      String result = bank.processRequest(customer, "TESTADDMONEY", "Bhagy Main 250.00 Payroll");
+
+      assertEquals("Command not recognised", result,
+              "Customers should not be allowed to run the test add money command.");
+  }
 }
 
 
