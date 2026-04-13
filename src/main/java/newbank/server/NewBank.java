@@ -266,15 +266,33 @@ public class NewBank {
     String result = transactionManager.payMoney();
   
     if (result.startsWith("SUCCESS")) {
-      Transaction tx = new Transaction(
+      float value = transactionManager.getValue();
+        String fromAccount = transactionManager.getFromAccountName();
+
+      // Sender (OUT)
+      Transaction txOut = new Transaction(
         "PAY to " + args.split(" ")[1],
-        transactionManager.getValue(),
+        -value,
         new java.sql.Date(System.currentTimeMillis())
       );
 
-      // use FROM account name
-      String key = customerID.getKey() + ":" + transactionManager.getFromAccountName();
-      transactionLedger.record(key, tx);
+      String fromKey = customerID.getKey() + ":" + fromAccount;
+      transactionLedger.record(fromKey, txOut);
+
+      // Receiver (IN)
+      String payee = args.split(" ")[1];
+
+      Customer recipient = customers.get(payee);
+      String toAccount = recipient.getFirstAccount().getName();
+
+      Transaction txIn = new Transaction(
+        "PAY from " + customerID.getKey(),
+        value,
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      String toKey = payee + ":" + toAccount;
+      transactionLedger.record(toKey, txIn);
     }
     return result;
   }

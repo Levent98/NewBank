@@ -41,7 +41,7 @@ MOVE <Amount> <From> <To>
 e.g. MOVE 10 Main Saving 
 Returns SUCCESS: £10.00 transferred from Checking to Saving
 
-PAY <From account> <Payee name> <Ammount>
+PAY <From account> <Payee name> <Amount>
 e.g. PAY Main John 100
 Returns SUCCESS - you sent John 100
 or 
