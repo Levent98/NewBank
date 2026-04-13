@@ -8,6 +8,8 @@ public class Customer {
   private ArrayList<Account> accounts;
   private ArrayList<Account> deactivatedAccounts;
 
+  private ArrayList<Account> deactivatedAccounts;
+
   public Customer() {
     accounts = new ArrayList<>();
     deactivatedAccounts = new ArrayList<>();
@@ -24,10 +26,17 @@ public class Customer {
   public String accountsToString() {
     StringBuilder sb = new StringBuilder();
 
+<<<<<<< HEAD
     for (Account a : accounts) {
       sb.append(a.toString()).append("|");
     }
     for (Account a : deactivatedAccounts) {
+=======
+    for(Account a : accounts) {
+      sb.append(a.toString()).append("|");
+    }
+    for(Account a : deactivatedAccounts){
+>>>>>>> develop
       sb.append(a.getName()).append("- Inactive|");
     }
     return sb.toString();
