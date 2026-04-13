@@ -255,9 +255,7 @@ public class NewBankTest {
   void processRequest_DeactivateAccount(){
     NewBank bank = NewBank.getBank();
     CustomerID customerID = new CustomerID("Bhagy");
-    bank.processRequest(customerID,"DEACTIVATE","Main2");
-    bank.processRequest(customerID,"DEACTIVATE","Main3");
-    bank.processRequest(customerID,"PAY","Main Christina 2000");
+    bank.processRequest(customerID,"DEACTIVATE","BirthdayBlowout");
 
     // 1 - Negative balance
     assertEquals("FAILURE - Credit Card has negative balance",bank.processRequest(customerID,"DEACTIVATE","Credit Card"));
@@ -265,7 +263,7 @@ public class NewBankTest {
     // 2 - One account with balance
     bank.processRequest(customerID, "MOVE", "100 Main \"Credit Card\"");
     bank.processRequest(customerID,"DEACTIVATE","Credit Card");
-    assertEquals("FAILURE - Main is the only active account, with a balance of 900.0. Balance must be 0.",bank.processRequest(customerID,"DEACTIVATE","Main"));
+    assertEquals("FAILURE - Main is the only active account, with a balance of 100900.0. Balance must be 0.",bank.processRequest(customerID,"DEACTIVATE","Main"));
 
     // 3 - One account without balance
     bank.processRequest(customerID, "NEWACCOUNT", "Account 1");
@@ -274,19 +272,19 @@ public class NewBankTest {
     // 4 - More than 1 account + with balance
     // deactivate Main and transfer to Account 2
     bank.processRequest(customerID, "NEWACCOUNT", "Account 2");
-    assertEquals("SUCCESS - Main deactivated. Remaining balance of 900.0 moved to Account 2",bank.processRequest(customerID,"DEACTIVATE","Main"));
-    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
+    assertEquals("SUCCESS - Main deactivated. Remaining balance of 100900.0 moved to Account 2",bank.processRequest(customerID,"DEACTIVATE","Main"));
+    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 100900.0"));
     // deactivate Account 3 and transfer to Account 2
     bank.processRequest(customerID, "NEWACCOUNT", "Account 3");
     bank.processRequest(customerID, "MOVE", "900 \"Account 2\" \"Account 3\"");
     assertEquals("SUCCESS - Account 3 deactivated. Remaining balance of 900.0 moved to Account 2",bank.processRequest(customerID,"DEACTIVATE","Account 3"));
-    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
+    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 100900.0"));
 
     // 5 - More than 1 account + without balance
     // create new account
     bank.processRequest(customerID, "NEWACCOUNT", "Account 4");
     assertEquals("SUCCESS - Account 4 deactivated.",bank.processRequest(customerID,"DEACTIVATE","Account 4"));
-    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 900.0"));
+    assertEquals(true,bank.processRequest(customerID, "SHOWMYACCOUNTS","").contains("Account 2: 100900.0"));
 
     // 6 - Account does not exist
     assertEquals("FAILURE - Account 4 does not exist",bank.processRequest(customerID,"DEACTIVATE","Account 4"));
