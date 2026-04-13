@@ -1,150 +1,260 @@
-// UI class handles user input and display messages back to terminal.
-
 package newbank.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-public class UserInterface {
+public class UserInterface implements ExampleClient.ResponseListener {
 
-  private boolean isLoggedIn = false;
+  private volatile boolean isLoggedIn = false;
   private boolean isNewUser = false;
-  private boolean isEmployee = false;
+  private volatile boolean isEmployee = false;
+  private volatile boolean sessionTimedOut = false;
+  private volatile boolean serverDisconnected = false;
+
   private String username;
   private String password;
-  private BufferedReader userInput;
+  private final BufferedReader userInput;
   private ExampleClient client;
-  // Avoiding declaring response at every input
   private String response;
 
-  // constructor starts wrapped input stream
+  private final BlockingQueue<String> inputQueue = new LinkedBlockingQueue<>();
+
   public UserInterface() {
-    userInput = new BufferedReader(new InputStreamReader(System.in)); 
+    userInput = new BufferedReader(new InputStreamReader(System.in));
+    startConsoleReaderThread();
   }
 
-  // UI case 1 Or 2 logic method
   public void start() {
-
     System.out.println("Welcome to NewBank");
-
-    // User creation, server will by default create a new user for a LOGIN command on non existent customer if flag newUser is passed
     System.out.print("Are you a new user? Type \"YES\" or press Enter: ");
+
     try {
-      response = userInput.readLine();
+      response = takeInputLine();
     } catch (IOException e) {
       System.out.println("An error has occured, please restart program\n");
+      return;
     }
+
     if ("YES".equals(response)) {
       System.out.println("We'll create you an account, please enter the new username and password");
       isNewUser = true;
     }
 
     while (true) {
-      if (isLoggedIn == false){
-        // UI case 1 Pre login
-        try {
-          //ask for username
-          System.out.println("Enter Username ");
-          username =  userInput.readLine().trim();
-          //ask for password
-          System.out.println("Enter Password ");
-          password = userInput.readLine().trim();
-
-          // Input validation "|" will be used for messages
-          if (username.isEmpty() || username.contains("|") || password.isEmpty() || password.contains("|")) {
-            System.out.println("Username and password must not be empty or contain '|'. Please try again.\n");
-            continue;
-          }
-
-          //start new client connection
-          try {
-            client = new ExampleClient("localhost" ,14002); // ExmapleCLient object establishes server conection
-          } catch (IOException e) {
-            System.out.println("Error: Unable to establish NewBank server connection - please try again");
-            continue;
-          }
-
-          try {
-            // sends login details with LOGIN keyword so ClientHandler knows to authenticate + flag for user creation
-            // changed " " to "|" to separate arguments in the message sent to the server
-            client.sendCommand("LOGIN|" + username + "|" + password + "|" + (isNewUser ? "newUser" : ""));
-            response = client.readResponse(); 
-
-            // Need more complex error messages to account for weak password and already existing username
-            if (response != null && response.startsWith("ERROR")) {
-              System.out.println(response);
-              continue;
-            }
-            isNewUser = false; // reset isNewUser to false
-
-            if (response != null && response.startsWith("SUCCESS")) {
-              isLoggedIn = true;
-              // US09 to give visual feedback to the UI
-              isEmployee = response.contains("EMPLOYEE");
-              System.out.println("Login Successful\n");
-              showMenu(); // display command menu
-            } else {
-              System.out.println("Login Failed - Incorrect username or password\n");
-            }
-          } catch (IOException e) {
-            System.out.println("Error: Server connection lost");
-            client = null; // reset client
-          }
-
-        } catch (IOException e) {
-          System.out.println("An error has occured, please restart program\n");
-        }    
+      if (!isLoggedIn) {
+        handleLoginFlow();
       } else {
-        // UI case 2 Post login command handling
-        try {
-          String userCommand = userInput.readLine();
+        handlePostLoginFlow();
+      }
+    }
+  }
 
-          // Exit program locally (needs to trigger client side server connection cut + server side cancellation of customerID)
-          if ("EXIT".equals(userCommand)){
-            System.out.println("Thanks for using NewBank");
-            if(client != null) {
+  private void handleLoginFlow() {
+    try {
+      System.out.println("Enter Username ");
+      username = takeInputLine().trim();
+
+      System.out.println("Enter Password ");
+      password = takeInputLine().trim();
+
+      if (username.isEmpty() || username.contains("|") || password.isEmpty() || password.contains("|")) {
+        System.out.println("Username and password must not be empty or contain '|'. Please try again.\n");
+        return;
+      }
+
+      try {
+        client = new ExampleClient("localhost", 14002);
+        client.setResponseListener(this);
+      } catch (IOException e) {
+        System.out.println("Error: Unable to establish NewBank server connection - please try again");
+        return;
+      }
+
+      try {
+        client.sendCommand("LOGIN|" + username + "|" + password + "|" + (isNewUser ? "newUser" : ""));
+        response = client.readResponse();
+
+        if (response != null && response.startsWith("ERROR")) {
+          System.out.println(response);
+          closeClientQuietly();
+          return;
+        }
+
+        isNewUser = false;
+
+        if (response != null && response.startsWith("SUCCESS")) {
+          isLoggedIn = true;
+          sessionTimedOut = false;
+          serverDisconnected = false;
+          isEmployee = response.contains("EMPLOYEE");
+          System.out.println("Login Successful\n");
+          showMenu();
+        } else {
+          System.out.println("Login Failed - Incorrect username or password\n");
+          closeClientQuietly();
+        }
+      } catch (IOException e) {
+        System.out.println("Error: Server connection lost");
+        closeClientQuietly();
+      }
+
+    } catch (IOException e) {
+      System.out.println("An error has occured, please restart program\n");
+    }
+  }
+
+  private void handlePostLoginFlow() {
+    try {
+      while (isLoggedIn && !sessionTimedOut && !serverDisconnected) {
+        String userCommand = pollInputLine();
+
+        if (sessionTimedOut || !isLoggedIn) {
+          clearPendingInput();
+          return;
+        }
+
+        if (userCommand == null) {
+          continue;
+        }
+
+        userCommand = userCommand.trim();
+
+        if ("EXIT".equals(userCommand)) {
+          System.out.println("Thanks for using NewBank");
+          if (client != null) {
+            try {
               client.sendCommand("LOGOUT");
               client.readResponse();
-              client.close();
+            } catch (IOException e) {
+              // ignore
             }
-            break; // stop
+            closeClientQuietly();
           }
-          // Lougout locally (needs to trigger switch to UI login state + server side cancellation of customerID)
-          if ("LOGOUT".equals(userCommand)){
-            client.sendCommand("LOGOUT");
-            response = client.readResponse();
-            System.out.println(response);
-            // Clearing flags here
-            isLoggedIn = false;
-            isEmployee = false;
-            continue; // back to login
-          } else if (userCommand.contains("|")) {
-            System.out.println("\"|\" is not a valid character");
-            continue;
-          }
-
-          // send user command to server, switching to new protocole: command|arguments
-          String commandToSend = userCommand.replaceFirst(" ", "|");
-          client.sendCommand(commandToSend);
-
-          // read and display response from server
-          response = client.readResponse();
-          String[] lines = response.split("\\|");
-          // process multi line reponses
-          System.out.println("NewBank: ");
-          for (String item : lines) {
-            System.out.println("  " + item.trim());
-          }
-          System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
-
-        } catch (IOException e) {
-          System.out.println("Error communicating with server");
+          System.exit(0);
         }
+
+        if ("LOGOUT".equals(userCommand)) {
+          client.sendCommand("LOGOUT");
+          response = client.readResponse();
+          System.out.println(response);
+          clearSessionState();
+          closeClientQuietly();
+          return;
+        }
+
+        if (userCommand.isEmpty()) {
+          System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
+          continue;
+        }
+
+        if (userCommand.contains("|")) {
+          System.out.println("\"|\" is not a valid character");
+          System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
+          continue;
+        }
+
+        String commandToSend = userCommand.replaceFirst(" ", "|");
+        client.sendCommand(commandToSend);
+
+        response = client.readResponse();
+        String[] lines = response.split("\\|");
+
+        System.out.println("NewBank: ");
+        for (String item : lines) {
+          System.out.println("  " + item.trim());
+        }
+
+        if ("LOGGED OUT".equals(response)) {
+          clearSessionState();
+          closeClientQuietly();
+          return;
+        }
+
+        System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
       }
-    }    
+    } catch (IOException e) {
+      System.out.println("Error communicating with server");
+      clearSessionState();
+      closeClientQuietly();
+    }
   }
-  // menu display method
+
+  private void startConsoleReaderThread() {
+    Thread consoleReader = new Thread(() -> {
+      try {
+        while (true) {
+          String line = userInput.readLine();
+          if (line == null) {
+            inputQueue.offer("__EOF__");
+            break;
+          }
+          inputQueue.offer(line);
+        }
+      } catch (IOException e) {
+        inputQueue.offer("__EOF__");
+      }
+    }, "newbank-console-reader");
+
+    consoleReader.setDaemon(true);
+    consoleReader.start();
+  }
+
+  private String takeInputLine() throws IOException {
+    try {
+      String line = inputQueue.take();
+      if ("__EOF__".equals(line)) {
+        throw new IOException("Console input closed");
+      }
+      return line;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while waiting for console input", e);
+    }
+  }
+
+  private String pollInputLine() throws IOException {
+    try {
+      String line = inputQueue.poll(200, TimeUnit.MILLISECONDS);
+      if (line == null) {
+        return null;
+      }
+      if ("__EOF__".equals(line)) {
+        throw new IOException("Console input closed");
+      }
+      return line;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IOException("Interrupted while waiting for console input", e);
+    }
+  }
+
+  private void clearPendingInput() {
+    inputQueue.clear();
+  }
+
+  private void clearSessionState() {
+    isLoggedIn = false;
+    isEmployee = false;
+    sessionTimedOut = false;
+    serverDisconnected = false;
+  }
+
+  private void closeClientQuietly() {
+    if (client != null) {
+      try {
+        client.close();
+      } catch (IOException e) {
+        // ignore
+      } finally {
+        client = null;
+      }
+    }
+  }
+
   private void showMenu() {
     System.out.print("Welcome to NewBank,\n");
     System.out.print("This service is controlled via command line.\n");
@@ -166,9 +276,41 @@ public class UserInterface {
     System.out.println("\nEnter command at the prompt");
     System.out.print(isEmployee ? "EMPLOYEE> " : "CLIENT> ");
   }
-  // Client side program start
+
+  @Override
+  public void onTimeout() {
+    sessionTimedOut = true;
+    isLoggedIn = false;
+    isEmployee = false;
+
+    synchronized (System.out) {
+      System.out.println();
+      System.out.println("NewBank: ");
+      System.out.println("  LOGGED OUT - Session timed out");
+      System.out.println();
+    }
+
+    closeClientQuietly();
+    clearPendingInput();
+  }
+
+  @Override
+  public void onDisconnected() {
+    serverDisconnected = true;
+    isLoggedIn = false;
+    isEmployee = false;
+
+    synchronized (System.out) {
+      System.out.println();
+      System.out.println("Server disconnected.");
+    }
+
+    closeClientQuietly();
+    clearPendingInput();
+  }
+
   public static void main(String[] args) {
     UserInterface ui = new UserInterface();
     ui.start();
-  } 
-}  
+  }
+}
