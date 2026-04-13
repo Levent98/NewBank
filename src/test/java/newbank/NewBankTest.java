@@ -192,6 +192,9 @@ public class NewBankTest {
 void processRequest_DeactivateAccount(){
   NewBank bank = NewBank.getBank();
   CustomerID customerID = new CustomerID("Bhagy");
+    bank.processRequest(customerID,"DEACTIVATE","Main2");
+    bank.processRequest(customerID,"DEACTIVATE","Main3");
+    bank.processRequest(customerID,"PAY","Main Christina 2000");
 
     // 1 - Negative balance
     assertEquals("FAILURE - Credit Card has negative balance",bank.processRequest(customerID,"DEACTIVATE","Credit Card"));
