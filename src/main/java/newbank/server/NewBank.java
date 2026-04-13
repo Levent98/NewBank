@@ -211,7 +211,7 @@ public class NewBank {
     try {
       amount = Float.parseFloat(parts[2]);
     } catch (NumberFormatException e) {
-      return "ERROR: Value is in the incorrect format. Please specify as an integer or a float with two decimal points.";
+      return "ERROR: Value is in the incorrect format.";
     }
 
     String source = parts[3];
