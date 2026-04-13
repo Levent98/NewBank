@@ -28,6 +28,8 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
+    bhagy.addAccount(new Account("Main2", 1000.0f));
+    bhagy.addAccount(new Account("Main3", 1000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -143,9 +145,18 @@ public class NewBank {
       }
   }
 
-  // Adapter to new client-server protocol
+  // VIEWALL customer string builder method
+  // Creates a mutable string object to build a final output that can be updated upon each use without creating multiple string objects and consuming memory/CPU before garbage collection occurs
   private String viewAllCustomers() {
-    return String.join("|", customers.keySet());
+    StringBuilder result = new StringBuilder();
+      for (String customerName : customers.keySet()) {
+        Customer customer = customers.get(customerName);
+        result.append(customerName)
+          .append(": "+"|")
+          .append(customer.accountsToString())
+          .append("|");
+      }
+    return result.toString();
   }
 
   private String showMyAccounts(CustomerID customer) {

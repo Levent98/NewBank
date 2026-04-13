@@ -14,7 +14,7 @@ public class Customer {
   public String accountsToString() {
     String s = "";
     for(Account a : accounts) {
-      s += a.toString();
+      s += a.toString() + "|"; // added | delimiter to add additional accounts to newline in UI display
     }
     return s;
   }
