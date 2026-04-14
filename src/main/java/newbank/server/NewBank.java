@@ -60,7 +60,7 @@ public class NewBank {
     }
 
     Customer newCustomer = new Customer();
-    newCustomer.addAccount(new Account("Checking", 250.0f));
+    newCustomer.addAccount(new Account("Default", 0.0f));
     customers.put(userName, newCustomer);
     return "SUCCESS: Account created";
   }
@@ -93,7 +93,7 @@ public class NewBank {
       return null;
     }
     Customer user = new Customer();
-    user.addAccount(new Account("Checking", 250.0f));
+    user.addAccount(new Account("Default", 0.0f));
     customers.put(userName, user);
     customerPasswords.set(userName, password);
     return new CustomerID(userName);
