@@ -60,7 +60,7 @@ public class NewBank {
     }
 
     Customer newCustomer = new Customer();
-    newCustomer.addAccount(new Account("Checking", 250.0f));
+    
     customers.put(userName, newCustomer);
     return "SUCCESS: Account created";
   }
@@ -93,7 +93,7 @@ public class NewBank {
       return null;
     }
     Customer user = new Customer();
-    user.addAccount(new Account("Checking", 250.0f));
+  
     customers.put(userName, user);
     customerPasswords.set(userName, password);
     return new CustomerID(userName);
@@ -167,7 +167,7 @@ public class NewBank {
     boolean success = c.addAccount(accountName);
 
     return success
-        ? "SUCCESS - a new account '" + accountName + "' has been created."
+        ? "SUCCESS - a new account '" + accountName + "' has been created. Minimum opening deposit of £1 required before activation."
         : "FAIL - an error occured.";
   }
 
