@@ -6,7 +6,6 @@ public class Customer {
   private CustomerID customerID;
   private String fullName;
   private ArrayList<Account> accounts;
-
   private ArrayList<Account> deactivatedAccounts;
 
   public Customer() {
@@ -25,10 +24,10 @@ public class Customer {
   public String accountsToString() {
     StringBuilder sb = new StringBuilder();
 
-    for(Account a : accounts) {
+    for (Account a : accounts) {
       sb.append(a.toString()).append("|");
     }
-    for(Account a : deactivatedAccounts){
+    for (Account a : deactivatedAccounts) {
       sb.append(a.getName()).append("- Inactive|");
     }
     return sb.toString();
@@ -37,23 +36,22 @@ public class Customer {
   public void addAccount(Account account) {
     accounts.add(account);
   }
-  // Adds the new account as long as there are no more than 10 accounts already setup
+
   public boolean addAccount(String name) {
     for (Account a : accounts) {
       if (a.getName().equals(name)) {
         return false;
       }
-      if (accounts.size()>10) {
+      if (accounts.size() > 10) {
         return false;
       }
     }
-    // Default opening balance set to 0.0
     accounts.add(new Account(name, 0.0f));
     return true;
   }
 
-  public Account getAccount(String accountName){
-    for(Account account : accounts){
+  public Account getAccount(String accountName) {
+    for (Account account : accounts) {
       if (account.getName().equals(accountName)) {
         return account;
       }
@@ -63,8 +61,8 @@ public class Customer {
 
   public Account getFirstAccount() {
     if (accounts.isEmpty()) {
-        return null;
+      return null;
     }
     return accounts.get(0);
-  } 
+  }
 }

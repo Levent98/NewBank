@@ -245,7 +245,67 @@ class TransactionManagerTest {
         String result = bank.processRequest(customer, "PAY", "Main FakeUser 100");
         assertEquals("FAIL - Account name not valid", result);
     }
+// Add money 
+    @Test
+    void constructor_TestExceptionMessage_AddMoneyRequestHasTooFewArguments() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Main", 1000.0f));
 
+        String request1 = "ADDMONEY";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request1);
+        });
+        assertEquals("ERROR: ADDMONEY command must be in the format \"ADDMONEY TOACCOUNT AMOUNT SOURCE\"", exception.getMessage());
 
+        String request2 = "ADDMONEY Main";
+        exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request2);
+        });
+        assertEquals("ERROR: ADDMONEY command must be in the format \"ADDMONEY TOACCOUNT AMOUNT SOURCE\"", exception.getMessage());
+
+        String request3 = "ADDMONEY Main 250.00";
+        exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request3);
+        });
+        assertEquals("ERROR: ADDMONEY command must be in the format \"ADDMONEY TOACCOUNT AMOUNT SOURCE\"", exception.getMessage());
+    }
+
+    @Test
+    void constructor_TestExceptionMessage_AddMoneyInvalidAccount() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Main", 1000.0f));
+
+        String request = "ADDMONEY FakeAccount 250.00 Payroll";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request);
+        });
+        assertEquals("FAIL - Account name not valid", exception.getMessage());
+    }
+
+    @Test
+    void constructor_TestExceptionMessage_AddMoneyZeroAmount() {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Main", 1000.0f));
+
+        String request = "ADDMONEY Main 0.00 Payroll";
+        Exception exception = assertThrows(Exception.class, () -> {
+            new TransactionManager(customer, request);
+        });
+        assertEquals("FAIL - Amount must be greater than zero", exception.getMessage());
+    }
+
+    @Test
+    void addMoney_TestCorrectValues() throws Exception {
+        Customer customer = new Customer();
+        customer.addAccount(new Account("Main", 1000.0f));
+
+        TransactionManager transactionManager =
+                new TransactionManager(customer, "ADDMONEY Main 250.00 Payroll");
+
+        String result = transactionManager.addMoney();
+
+        assertEquals("SUCCESS - 250.00 added to Main", result);
+        assertEquals(1250.0f, customer.getAccount("Main").getBalance());
+    }
 
 }
