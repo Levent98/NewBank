@@ -30,12 +30,12 @@ Returns SUCCESS: Password changed
 SHOWMYACCOUNTS
 Returns a list of all the customers accounts along with their current balance 
 e.g. 
-Checking: 250.0
+Current: 250.0
 Saving: 900.0
 
 NEWACCOUNT <Name>
 e.g. NEWACCOUNT Savings
-Returns SUCCESS - a new account 'Savings' has been created.
+Returns "SUCCESS - a new account 'Savings' has been created. Minimum opening deposit of £1 required before activation."
 
 MOVE <Amount> <From> <To>
 e.g. MOVE 10 Main Saving 
@@ -75,6 +75,10 @@ Returns a list of all customers and their accounts held in database
 VIEWTRANSACTIONS
 e.g. VIEWTRANSACTIONS
 Returns a list of all transactions for active bank server session
+
+TESTADDMONEY <toUsername> <toAccount> <amount> <source>
+e.g. TESTADDMONEY John Main 500 DevTeamGift
+Returns "SUCCESS - 500.00 added to Main"
 
 LOGOUT
 e.g. LOGOUT
