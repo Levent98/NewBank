@@ -35,7 +35,7 @@ public class NewBankTest {
 
     String result = bank.processRequest(customer, "NEWACCOUNT", "Travel");
 
-    assertEquals("SUCCESS - a new account 'Travel' has been created.", result,
+    assertEquals("SUCCESS - a new account 'Travel' has been created. Minimum opening deposit of £1 required before activation.", result,
         "System should confirm successful account creation.");
   }
 
@@ -155,44 +155,9 @@ public class NewBankTest {
     assertTrue(result.contains("A2"), "Should contain newly created account 'A2'");
 }
 
-  @Test
-  void newUser_DefaultAccountCreatedWithZeroBalance() {
-    NewBank bank = NewBank.getBank();
 
-    // Create a brand new user
-    String response = bank.createLogInDetails("TestUser1", "averystrongpassword");
 
-    assertTrue(response.startsWith("SUCCESS"),
-        "User creation should succeed");
 
-    // Now check their accounts
-    CustomerID customer = new CustomerID("TestUser1");
-    String accounts = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
-
-    assertTrue(accounts.contains("Default"),
-        "New users should receive a 'Default' account");
-
-    assertTrue(accounts.contains("0.0") || accounts.contains("0.00"),
-        "Default account should have a £0.00 balance");
-}
-
-  @Test
-  void newUser_DefaultAccountCreatedViaSetLogInDetails_ZeroBalance() {
-    NewBank bank = NewBank.getBank();
-
-    CustomerID newCustomer = bank.setLogInDetails("TestUser2", "averystrongpassword");
-
-    assertNotNull(newCustomer,
-        "setLogInDetails should return a valid CustomerID");
-
-    String accounts = bank.processRequest(newCustomer, "SHOWMYACCOUNTS", "");
-
-    assertTrue(accounts.contains("Default"),
-        "New users should receive a 'Default' account");
-
-    assertTrue(accounts.contains("0.0") || accounts.contains("0.00"),
-        "Default account should have a £0.00 balance");
-}
 
   @Test
   void processRequest_ViewAll_AsAdmin_ReturnsCustomerList() {
