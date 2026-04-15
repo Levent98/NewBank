@@ -16,6 +16,7 @@ tmp/
 *.swp
 
 # --- Maven / Build ---
+.mvn/
 target/
 classes/
 out/
@@ -31,3 +32,5 @@ Thumbs.db
 *.jar
 *.war
 *.ear
+
+*.orig
