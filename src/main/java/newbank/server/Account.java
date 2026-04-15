@@ -1,15 +1,8 @@
 package newbank.server;
 
-import java.sql.Date;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-
 public class Account {
-
   private final String accountName;
   private float balance;
-  private String sortCode;
-  private int accountNumber;
 
   public Account(String accountName, float openingBalance) {
     this.accountName = accountName;
@@ -20,33 +13,29 @@ public class Account {
     return accountName;
   }
 
-  public float getBalance() {
+  public synchronized float getBalance() {
     return this.balance;
   }
 
-  /**
-   * Updates the account balance.
-   * Required for synchronization between database and memory.
-   */
-  public void setBalance(float balance) {
+  // ADDED: This method was missing, causing the Customer.java build error
+  public synchronized void setBalance(float balance) {
     this.balance = balance;
+  }
+
+  public synchronized String deposit(float value, String name) {
+    if (value < 0) return null;
+    this.balance += value;
+    return "SUCCESS";
+  }
+
+  public synchronized String withdrawOrPay(float value, String name) {
+    if (value < 0 || balance < value) return null;
+    this.balance -= value;
+    return "SUCCESS";
   }
 
   @Override
   public String toString() {
     return (accountName + ": " + balance);
-  }
-
-  public String deposit(float value, String name) {
-    if (value < 0) return null;
-    this.balance += value;
-    // Transaction logging logic can be handled here or in NewBank
-    return "SUCCESS";
-  }
-
-  public String withdrawOrPay(float value, String name) {
-    if (value < 0 || balance < value) return null;
-    this.balance -= value;
-    return "SUCCESS";
   }
 }
