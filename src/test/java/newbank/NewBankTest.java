@@ -35,7 +35,7 @@ public class NewBankTest {
 
     String result = bank.processRequest(customer, "NEWACCOUNT", "Travel");
 
-    assertEquals("SUCCESS - a new account 'Travel' has been created.", result,
+    assertEquals("SUCCESS - a new account 'Travel' has been created. Minimum opening deposit of £1 required before activation.", result,
         "System should confirm successful account creation.");
   }
 
@@ -133,6 +133,31 @@ public class NewBankTest {
     assertEquals("FAIL - Max Payment 3500.0", result,
         "System should prevent payments above the maximum allowed amount.");
   }
+
+  @Test
+  void showMyAccounts_MultipleAccounts_ReturnsEachOnNewLine() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    // Add two accounts
+    bank.processRequest(customer, "NEWACCOUNT", "A1");
+    bank.processRequest(customer, "NEWACCOUNT", "A2");
+
+    String result = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
+
+    String[] lines = result.split("\\|");
+
+    assertTrue(lines.length >= 3, 
+        "SHOWMYACCOUNTS should return each account separated by '|'");
+
+    assertTrue(result.contains("Main"), "Should contain existing account 'Main'");
+    assertTrue(result.contains("A1"), "Should contain newly created account 'A1'");
+    assertTrue(result.contains("A2"), "Should contain newly created account 'A2'");
+}
+
+
+
+
 
   @Test
   void processRequest_ViewAll_AsAdmin_ReturnsCustomerList() {
