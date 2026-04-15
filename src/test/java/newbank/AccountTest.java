@@ -14,6 +14,7 @@ class AccountTest {
 
         // value correctly addresses incorrect values
         assertEquals(null, account.deposit(-4.00F, "Test"));
+        assertEquals(null, account.deposit(0.00F, "Test"));
 
         // value correctly creates a transaction and adds it to the AccountData
         assertEquals("SUCCESS", account.deposit(4.00F, "Test"));

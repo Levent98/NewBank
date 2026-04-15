@@ -1,5 +1,6 @@
 package newbank;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import newbank.server.CustomerID;
@@ -9,67 +10,65 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NewBankTest {
 
-  @Test
-    void addAccount_NewValidAccount_IsVisibleInList() {
-      NewBank bank = NewBank.getBank();
-      CustomerID customer = new CustomerID("Bhagy");
-
-      bank.processRequest(customer, "NEWACCOUNT", "Holiday");
-
-      String result = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
-
-      assertTrue(result.contains("Holiday"),
-                "SHOWMYACCOUNTS should list the newly created account.");
-    }
+  @BeforeEach
+  void reset() {
+    NewBank.getBank().reset();
+  }
 
   @Test
-    void processRequest_AccountCreated_ReturnsMessage() {
-      NewBank bank = NewBank.getBank();
-      CustomerID customer = new CustomerID("Bhagy");
+  void addAccount_NewValidAccount_IsVisibleInList() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
 
-      String result = bank.processRequest(customer, "NEWACCOUNT", "Travel");
+    bank.processRequest(customer, "NEWACCOUNT", "Holiday");
 
-      assertEquals("SUCCESS - a new account 'Travel' has been created.",result,
-                "System should confirm successful account creation.");
-    }
+    String result = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
 
-  @Test
-    void processRequest_DuplicateAccount_ReturnsFail() {
-      NewBank bank = NewBank.getBank();
-      CustomerID customer = new CustomerID("Bhagy");
-
-      // First creation succeeds
-      bank.processRequest(customer, "NEWACCOUNT", "Bills");
-
-      // Second creation with same name should fail
-      String result = bank.processRequest(customer, "NEWACCOUNT", "Bills");
-
-      assertEquals("FAIL - an error occured.", result,
-                "System should notify user of an error when account creation fails.");
-    }
+    assertTrue(result.contains("Holiday"),
+        "SHOWMYACCOUNTS should list the newly created account.");
+  }
 
   @Test
-    void processRequest_MaximumTenAccounts_ReturnsFail() {
-      NewBank bank = NewBank.getBank();
-      CustomerID customer = new CustomerID("Christina");
+  void processRequest_AccountCreated_ReturnsMessage() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
 
-      // Create 10 accounts
-      for (int i = 1; i < 11; i++) {
-        String result = bank.processRequest(customer, "NEWACCOUNT", "Acc" + i);
-          assertTrue(result.startsWith("SUCCESS"),
-                  "Account " + i + " should be created successfully.");
-      }
+    String result = bank.processRequest(customer, "NEWACCOUNT", "Travel");
 
-      // Attempt the 11th
-      String result = bank.processRequest(customer, "NEWACCOUNT", "TooMany");
+    assertEquals("SUCCESS - a new account 'Travel' has been created. Minimum opening deposit of £1 required before activation.", result,
+        "System should confirm successful account creation.");
+  }
 
-      assertEquals("FAIL - an error occured.", result,
-                "System should prevent creation of more than 10 accounts.");
+  @Test
+  void processRequest_DuplicateAccount_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    bank.processRequest(customer, "NEWACCOUNT", "Bills");
+    String result = bank.processRequest(customer, "NEWACCOUNT", "Bills");
+
+    assertEquals("FAIL - an error occured.", result,
+        "System should notify user of an error when account creation fails.");
+  }
+
+  @Test
+  void processRequest_MaximumTenAccounts_ReturnsFail() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Christina");
+
+    for (int i = 1; i < 11; i++) {
+      String result = bank.processRequest(customer, "NEWACCOUNT", "Acc" + i);
+      assertTrue(result.startsWith("SUCCESS"),
+          "Account " + i + " should be created successfully.");
     }
 
-    // Additional tests for PAY commands
+    String result = bank.processRequest(customer, "NEWACCOUNT", "TooMany");
 
-      @Test
+    assertEquals("FAIL - an error occured.", result,
+        "System should prevent creation of more than 10 accounts.");
+  }
+
+  @Test
   void processRequest_PayValidRecipient_ReturnsSuccessMessage() {
     NewBank bank = NewBank.getBank();
     CustomerID customer = new CustomerID("Bhagy");
@@ -77,7 +76,7 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "PAY", "Main John 100");
 
     assertEquals("SUCCESS - you sent John 100.00", result,
-            "System should confirm successful payment.");
+        "System should confirm successful payment.");
   }
 
   @Test
@@ -88,7 +87,7 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "PAY", "FakeAccount John 100");
 
     assertEquals("FAIL - Account name not valid", result,
-            "System should notify user when the source account name is invalid.");
+        "System should notify user when the source account name is invalid.");
   }
 
   @Test
@@ -99,7 +98,7 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "PAY", "Main FakeUser 100");
 
     assertEquals("FAIL - Account name not valid", result,
-            "System should notify user when the recipient user is invalid.");
+        "System should notify user when the recipient user is invalid.");
   }
 
   @Test
@@ -110,7 +109,7 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "PAY", "Checking Christina 1000");
 
     assertEquals("FAIL - Insufficient balance", result,
-            "System should notify user when balance is insufficient.");
+        "System should notify user when balance is insufficient.");
   }
 
   @Test
@@ -132,11 +131,35 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "PAY", "Main John 4000");
 
     assertEquals("FAIL - Max Payment 3500.0", result,
-            "System should prevent payments above the maximum allowed amount.");
+        "System should prevent payments above the maximum allowed amount.");
   }
-  
-    // US08 VIEWALL tests
-    @Test
+
+  @Test
+  void showMyAccounts_MultipleAccounts_ReturnsEachOnNewLine() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = new CustomerID("Bhagy");
+
+    // Add two accounts
+    bank.processRequest(customer, "NEWACCOUNT", "A1");
+    bank.processRequest(customer, "NEWACCOUNT", "A2");
+
+    String result = bank.processRequest(customer, "SHOWMYACCOUNTS", "");
+
+    String[] lines = result.split("\\|");
+
+    assertTrue(lines.length >= 3, 
+        "SHOWMYACCOUNTS should return each account separated by '|'");
+
+    assertTrue(result.contains("Main"), "Should contain existing account 'Main'");
+    assertTrue(result.contains("A1"), "Should contain newly created account 'A1'");
+    assertTrue(result.contains("A2"), "Should contain newly created account 'A2'");
+}
+
+
+
+
+
+  @Test
   void processRequest_ViewAll_AsAdmin_ReturnsCustomerList() {
     NewBank bank = NewBank.getBank();
     CustomerID admin = bank.checkLogInDetails("Admin", "admin");
@@ -144,13 +167,13 @@ public class NewBankTest {
     String result = bank.processRequest(admin, "VIEWALL", "");
 
     assertTrue(result.contains("John"),
-            "VIEWALL should include customer John.");
+        "VIEWALL should include customer John.");
     assertTrue(result.contains("Christina"),
-            "VIEWALL should include customer Christina.");
+        "VIEWALL should include customer Christina.");
     assertTrue(result.contains("Bhagy"),
-            "VIEWALL should include customer Bhagy.");
+        "VIEWALL should include customer Bhagy.");
   }
-  // customer cannot access VIEWALL
+
   @Test
   void processRequest_ViewAll_AsCustomer_ReturnsError() {
     NewBank bank = NewBank.getBank();
@@ -160,10 +183,9 @@ public class NewBankTest {
     String result = bank.processRequest(customer, "VIEWALL", "");
 
     assertEquals("Command not recognised", result,
-            "Customers should not be allowed to use VIEWALL.");
+        "Customers should not be allowed to use VIEWALL.");
   }
 
-  // null user check
   @Test
   void processRequest_ViewAll_NoUser_ReturnsError() {
     NewBank bank = NewBank.getBank();
@@ -171,8 +193,99 @@ public class NewBankTest {
     String result = bank.processRequest(null, "VIEWALL", "");
 
     assertEquals("Command not recognised", result,
-            "Unauthenticated users should not be allowed to use VIEWALL.");
+        "Unauthenticated users should not be allowed to use VIEWALL.");
+  }
+
+  @Test
+void processRequest_TestAddMoney_AsAdmin_ReturnsSuccess() {
+  NewBank bank = NewBank.getBank();
+  CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+  String result = bank.processRequest(admin, "TESTADDMONEY", "Bhagy Main 250.00 Payroll");
+
+  assertEquals("SUCCESS - 250.00 added to Main", result,
+      "Admin should be able to trigger the test add money backend flow.");
+}
+  
+  @Test
+  void processRequest_ViewTransactions_AsAdmin_ReturnsData() {
+    NewBank bank = NewBank.getBank();
+
+    // Perform a transaction first
+    CustomerID customer = new CustomerID("John");
+    bank.processRequest(customer, "MOVE", "10 Main Main2");
+
+    // Login as admin
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertFalse(result.equals("No transactions recorded"),
+            "Admin should see recorded transactions.");
+  }
+  // Customer cannot access VIEWTRANSACITONS
+  @Test
+  void processRequest_ViewTransactions_AsCustomer_ReturnsError() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    String result = bank.processRequest(customer, "VIEWTRANSACTIONS", "");
+
+    assertEquals("Command not recognised", result,
+            "Customers should not be able to view all transactions.");
+  }
+  // PAY creates a transaction
+  @Test
+  void processRequest_Pay_CreatesTransactionInLedger() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    bank.processRequest(customer, "PAY", "Main Bhagy 5.00");
+
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertTrue(result.contains("PAY"),
+            "Ledger should contain PAY transaction.");
+  }
+  // MOVE creates a transaction
+  @Test
+  void processRequest_Move_CreatesTransactionInLedger() {
+    NewBank bank = NewBank.getBank();
+
+    CustomerID customer = new CustomerID("John");
+
+    bank.processRequest(customer, "MOVE", "5 Main Checking");
+
+    CustomerID admin = bank.checkLogInDetails("Admin", "admin");
+
+    String result = bank.processRequest(admin, "VIEWTRANSACTIONS", "");
+
+    assertTrue(result.contains("MOVE"),
+            "Ledger should contain MOVE transaction.");
+  }
+
+  @Test
+  void processRequest_TestAddMoney_AsCustomer_ReturnsCommandNotRecognised() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customer = bank.checkLogInDetails("Bhagy", "bhagy");
+
+    String result = bank.processRequest(customer, "TESTADDMONEY", "Bhagy Main 250.00 Payroll");
+
+    assertEquals("Command not recognised", result,
+        "Customers should not be allowed to run the test add money command.");
+  }
+
+  @Test
+  void processRequest_DeactivateAccount() {
+    NewBank bank = NewBank.getBank();
+    CustomerID customerID = new CustomerID("Bhagy");
+
+    String result = bank.processRequest(customerID, "DEACTIVATE", "BirthdayBlowout");
+
+    assertTrue(result.contains("SUCCESS") || result.contains("FAILURE"));
   }
 }
-
-

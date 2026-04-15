@@ -1,35 +1,39 @@
 package newbank.server;
 
-import java.io.BufferedReader;
-import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 //import java.util.HashMap.*;
 import java.util.StringTokenizer;
 
 public class NewBank {
 
   private static final NewBank bank = new NewBank();
-  // HashMap is not thread-safe with concurrent writes (adding/removing customers/accounts, transfers, etc.),
-  // unsynchronized access can lead to: lost updates inconsistent reads
-  private final HashMap<String,Customer> customers;
-  // US01 Added a PasswordManager object to store passwords
+  private final HashMap<String, Customer> customers;
   private final PasswordManager customerPasswords;
-  // US09 Added an employee instance
   private final PasswordManager employeePasswords;
-  
+  // Transaction ledger
+  private final TransactionLedger transactionLedger = new TransactionLedger();
+
   private NewBank() {
     customers = new HashMap<>();
-    // US01 and 09 Added a PasswordManager object to store passwords
     customerPasswords = new PasswordManager();
     employeePasswords = new PasswordManager();
+    addTestData();
+  }
+
+  public void reset() {
+    customers.clear();
+    customerPasswords.clear();
+    employeePasswords.clear();
     addTestData();
   }
 
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
-    bhagy.addAccount(new Account("Main2", 1000.0f));
-    bhagy.addAccount(new Account("Main3", 1000.0f));
+    bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
+    bhagy.addAccount(new Account("Credit Card", -100.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -40,6 +44,8 @@ public class NewBank {
 
     Customer john = new Customer();
     john.addAccount(new Account("Checking", 250.0f));
+    john.addAccount(new Account("Saving", 900.0f));
+    john.addAccount(new Account("Main", 60.0f));
     customers.put("John", john);
     customerPasswords.setUnchecked("John", "john");
 
@@ -59,18 +65,14 @@ public class NewBank {
       return response;
     }
 
-    // TODO as we won't give people money but copied from addTestData for now
     Customer newCustomer = new Customer();
-    newCustomer.addAccount(new Account("Checking", 250.0f));
+    
     customers.put(userName, newCustomer);
     return "SUCCESS: Account created";
   }
-  
-  // Marking them synchronized forces those calls to run one-at-a-time on that single NewBank instance, which avoids certain race conditions.
-  // They use customers which is a non thread safe hashmap
+
   public synchronized CustomerID checkLogInDetails(String userName, String password) {
-    // US02 Added password check before returning the CustomerID
-    if(customers.containsKey(userName) && customerPasswords.check(userName, password)) {
+    if (customers.containsKey(userName) && customerPasswords.check(userName, password)) {
       return new CustomerID(userName, CustomerID.Role.CUSTOMER);
     }
     if (employeePasswords.check(userName, password)) {
@@ -83,7 +85,6 @@ public class NewBank {
     if (password == null) {
       return "FAIL";
     }
-    // Update whichever store owns this username
     if (customerPasswords.hasUserName(userName)) {
       return customerPasswords.set(userName, password);
     }
@@ -93,38 +94,37 @@ public class NewBank {
     return "FAIL";
   }
 
-  // US01 simple account creation following addTestData() after checking for account already in use
   public synchronized CustomerID setLogInDetails(String userName, String password) {
     if (userName == null || customers.containsKey(userName)) {
       return null;
     }
     Customer user = new Customer();
-    user.addAccount(new Account("Checking", 250.0f));
+  
     customers.put(userName, user);
     customerPasswords.set(userName, password);
     return new CustomerID(userName);
   }
 
-  // commands from the NewBank customer are processed in this method
-    public synchronized String processRequest(CustomerID customer, String command, String args) {
-      if (customer == null) {
-        return "Command not recognised";
-      }
+  public synchronized String processRequest(CustomerID customer, String command, String args) {
+    if (customer == null) {
+      return "Command not recognised";
+    }
 
-      // this could be done vs password manager if tests are changed
-      boolean isEmployee = customer.isEmployee();
-      boolean isCustomer = customers.containsKey(customer.getKey());
+    boolean isEmployee = customer.isEmployee();
+    boolean isCustomer = customers.containsKey(customer.getKey());
 
-      // Employees are always admitted; non-employees must be in the customers map
-      if (!isEmployee && !isCustomer) {
-        return "Command not recognised";
-      }
+    if (!isEmployee && !isCustomer) {
+      return "Command not recognised";
+    }
 
       // CLI action based on user input - this is where we could add further commands
       switch (command) {
         case "VIEWALL":
           if (!isEmployee) return "Command not recognised";
           return viewAllCustomers();
+        case "VIEWTRANSACTIONS":
+          if (!isEmployee) return "Command not recognised";
+          return viewAllTransactions();
         case "SHOWMYACCOUNTS":
           if (!isCustomer) return "Command not recognised";
           return showMyAccounts(customer);
@@ -137,30 +137,58 @@ public class NewBank {
         case "PAY":
           if (!isCustomer) return "Command not recognised";
           return payMoney(customer, args);
+        case "DEACTIVATE":
+          if(!isCustomer) return "Command not recognised";
+          return deactivateAccount(customer, args);
+        case "TESTADDMONEY":
+        if (!isEmployee) return "Command not recognised";
+        return testAddMoney(args);  
         default:
           return "Command not recognised";
       }
   }
 
-  // VIEWALL customer string builder method
-  // Creates a mutable string object to build a final output that can be updated upon each use without creating multiple string objects and consuming memory/CPU before garbage collection occurs
+  
   private String viewAllCustomers() {
     StringBuilder result = new StringBuilder();
-      for (String customerName : customers.keySet()) {
-        Customer customer = customers.get(customerName);
-        result.append(customerName)
-          .append(": "+"|")
+    for (String customerName : customers.keySet()) {
+      Customer customer = customers.get(customerName);
+      result.append(customerName)
+          .append(": ")
+          .append("|")
           .append(customer.accountsToString())
           .append("|");
-      }
+    }
     return result.toString();
   }
 
-  private String showMyAccounts(CustomerID customer) {
-    return (customers.get(customer.getKey())).accountsToString();
+  // Admin use VIEWTRANSACTION command method
+  private String viewAllTransactions() {
+    StringBuilder result = new StringBuilder();
+    HashMap<String, List<Transaction>> all = transactionLedger.getAllTransactions();
+    if (all.isEmpty()) {
+        return "No transactions recorded";
+    }
+    for (String accountName : all.keySet()) {
+        result.append(accountName).append(":|");
+        for (Transaction tx : all.get(accountName)) {
+            result.append(tx.getDate())
+              .append(" - ")
+              .append(tx.getReference())
+              .append(" £")
+              .append(String.format("%.2f", tx.getValue()))
+              .append("|");
+        }
+        result.append("|");
+    }
+    return result.toString();
   }
 
-  // If there is no account name given by the user after NEWACCOUNT the program returns the message
+  //
+  private String showMyAccounts(CustomerID customer) {
+    return customers.get(customer.getKey()).accountsToString();
+  }
+
   private String handleNewAccount(CustomerID customer, String accountName) {
     if (accountName == null || accountName.isEmpty()) {
       return "You must specify an account name.";
@@ -168,40 +196,197 @@ public class NewBank {
     return newAccount(customer, accountName);
   }
 
-  // Confirms account has been made or if account has not been made.  Fail only happens now if >10 accounts created
   private String newAccount(CustomerID customerID, String accountName) {
     Customer c = customers.get(customerID.getKey());
-
     boolean success = c.addAccount(accountName);
 
     return success
-            ? "SUCCESS - a new account '" + accountName + "' has been created."
-            : "FAIL - an error occured.";
+        ? "SUCCESS - a new account '" + accountName + "' has been created. Minimum opening deposit of £1 required before activation."
+        : "FAIL - an error occured.";
   }
 
   public String moveMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
-    // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;
     try {
       transactionManager = new TransactionManager(customer, "MOVE " + args);
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.moveMoney();
+    String result = transactionManager.moveMoney();
+
+    if (result.startsWith("SUCCESS")) {
+
+    String from = transactionManager.getFromAccountName();
+    String to = transactionManager.getToAccountName();
+    float value = transactionManager.getValue();
+
+    // Debit (from account)
+    Transaction txOut = new Transaction(
+      "MOVE OUT",
+      -value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    // Credit (to account)
+    Transaction txIn = new Transaction(
+      "MOVE IN",
+      value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    String fromKey = customerID.getKey() + ":" + from;
+    String toKey = customerID.getKey() + ":" + to;
+
+    transactionLedger.record(fromKey, txOut);
+    transactionLedger.record(toKey, txIn);
   }
 
+  return result;
+}
+
+  ////
   public String payMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
-    // Here we need to pass the values to the TransactionManager
     TransactionManager transactionManager;
     try {
       transactionManager = new TransactionManager(customer, customers, "PAY " + args);
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.payMoney();
+    String result = transactionManager.payMoney();
+
+    if (result.startsWith("SUCCESS")) {
+      float value = transactionManager.getValue();
+        String fromAccount = transactionManager.getFromAccountName();
+
+      // Sender (OUT)
+      Transaction txOut = new Transaction(
+        "PAY to " + args.split(" ")[1],
+        -value,
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      String fromKey = customerID.getKey() + ":" + fromAccount;
+      transactionLedger.record(fromKey, txOut);
+
+      // Receiver (IN)
+      String payee = args.split(" ")[1];
+
+      Customer recipient = customers.get(payee);
+      String toAccount = recipient.getFirstAccount().getName();
+
+      Transaction txIn = new Transaction(
+        "PAY from " + customerID.getKey(),
+        value,
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      String toKey = payee + ":" + toAccount;
+      transactionLedger.record(toKey, txIn);
+    }
+    return result;
+  }
+
+  public String testAddMoney(String args) {
+    String[] parts = args.split(" ", 4);
+
+    if (parts.length < 4) {
+      return "ERROR: TESTADDMONEY command must be in the format \"TESTADDMONEY CUSTOMER TOACCOUNT AMOUNT SOURCE\"";
+    }
+
+    String customerName = parts[0];
+    String accountName = parts[1];
+
+    float amount;
+    try {
+      amount = Float.parseFloat(parts[2]);
+    } catch (NumberFormatException e) {
+      return "ERROR: Value is in the incorrect format.";
+    }
+
+    String source = parts[3];
+
+    return processAddMoney(new CustomerID(customerName), accountName, amount, source);
+  }
+
+  public String processAddMoney(CustomerID customerID, String accountName, float amount, String source) {
+    if (!customers.containsKey(customerID.getKey())) {
+      return "FAIL - Customer name not valid";
+    }
+
+    Customer customer = customers.get(customerID.getKey());
+
+    TransactionManager transactionManager;
+    try {
+      transactionManager = new TransactionManager(
+          customer,
+          "ADDMONEY " + accountName + " " + String.format("%.2f", amount) + " " + source
+      );
+    } catch (Exception e) {
+      return e.getMessage();
+    }
+
+    String result = transactionManager.addMoney();
+      if (result.startsWith("SUCCESS")) {
+        Transaction tx = new Transaction(
+          "ADDMONEY " + source,
+          amount,
+          new java.sql.Date(System.currentTimeMillis())
+        );
+      String key = customerID.getKey() + ":" + accountName;
+      transactionLedger.record(key, tx);
+    }
+    return result;
+  }
+
+
+
+  private String deactivateAccount(CustomerID customerID, String args) {
+    if (args == null || args.isEmpty()) {
+      return "FAILURE - Provide account to deactivate";
+    }
+
+    Customer customer = customers.get(customerID.getKey());
+    ArrayList<Account> accounts = customer.getAccounts();
+    Account account = null;
+    int i;
+    for (i = 0; i < accounts.size(); i++) {
+      account = accounts.get(i);
+      if (account.getName().equals(args.trim())) {
+        break;
+      }
+    }
+
+    if (i == accounts.size()) {
+      return "FAILURE - " + args.trim() + " does not exist";
+    }
+
+    if (account.getBalance() < 0) {
+      return "FAILURE - " + args.trim() + " has negative balance";
+    }
+
+    String balanceTransferMessage = "";
+    if (account.getBalance() > 0) {
+      if (accounts.size() == 1) {
+        return "FAILURE - " + args.trim() + " is the only active account, with a balance of "
+            + account.getBalance() + ". Balance must be 0.";
+      }
+      if (i == 0) {
+        accounts.get(1).deposit(account.getBalance(), "Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance()
+            + " moved to " + accounts.get(1).getName();
+      } else {
+        accounts.get(0).deposit(account.getBalance(), "Move from " + args.trim());
+        balanceTransferMessage = " Remaining balance of " + account.getBalance()
+            + " moved to " + accounts.get(0).getName();
+      }
+    }
+
+    accounts.remove(i);
+    customer.getDeactivatedAccounts().add(account);
+    return "SUCCESS - " + args.trim() + " deactivated." + balanceTransferMessage;
   }
 }

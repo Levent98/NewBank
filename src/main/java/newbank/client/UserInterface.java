@@ -263,11 +263,13 @@ public class UserInterface implements ExampleClient.ResponseListener {
     System.out.println("\nMenu Options:");
     if (isEmployee) {
       System.out.println("\nVIEWALL");
+      System.out.println("VIEWTRANSACTIONS");
+      System.out.println("TESTADDMONEY <toUsername> <toAccount> <amount> <source>");
     } else {
       System.out.println("\nSHOWMYACCOUNTS");
       System.out.println("NEWACCOUNT <name>");
       System.out.println("MOVE <amount> <from> <to>");
-      System.out.println("PAY <person> <amount>");
+      System.out.println("PAY <fromaccount> <payee> <amount>");
     }
     System.out.println("LOGOUT");
     System.out.println("EXIT");
@@ -312,5 +314,9 @@ public class UserInterface implements ExampleClient.ResponseListener {
   public static void main(String[] args) {
     UserInterface ui = new UserInterface();
     ui.start();
-  }
-}
+
+   
+  } 
+}  
+
+
