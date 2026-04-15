@@ -2,6 +2,9 @@ package newbank.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+//import java.util.HashMap.*;
+import java.util.StringTokenizer;
 
 public class NewBank {
 
@@ -9,6 +12,8 @@ public class NewBank {
   private final HashMap<String, Customer> customers;
   private final PasswordManager customerPasswords;
   private final PasswordManager employeePasswords;
+  // Transaction ledger
+  private final TransactionLedger transactionLedger = new TransactionLedger();
 
   private NewBank() {
     customers = new HashMap<>();
@@ -27,9 +32,8 @@ public class NewBank {
   private void addTestData() {
     Customer bhagy = new Customer();
     bhagy.addAccount(new Account("Main", 1000.0f));
+    bhagy.addAccount(new Account("BirthdayBlowout", 100000.0f));
     bhagy.addAccount(new Account("Credit Card", -100.0f));
-    bhagy.addAccount(new Account("Main2", 1000.0f));
-    bhagy.addAccount(new Account("Main3", 1000.0f));
     customers.put("Bhagy", bhagy);
     customerPasswords.setUnchecked("Bhagy", "bhagy");
 
@@ -40,6 +44,8 @@ public class NewBank {
 
     Customer john = new Customer();
     john.addAccount(new Account("Checking", 250.0f));
+    john.addAccount(new Account("Saving", 900.0f));
+    john.addAccount(new Account("Main", 60.0f));
     customers.put("John", john);
     customerPasswords.setUnchecked("John", "john");
 
@@ -111,33 +117,38 @@ public class NewBank {
       return "Command not recognised";
     }
 
-    switch (command) {
-      case "VIEWALL":
+      // CLI action based on user input - this is where we could add further commands
+      switch (command) {
+        case "VIEWALL":
+          if (!isEmployee) return "Command not recognised";
+          return viewAllCustomers();
+        case "VIEWTRANSACTIONS":
+          if (!isEmployee) return "Command not recognised";
+          return viewAllTransactions();
+        case "SHOWMYACCOUNTS":
+          if (!isCustomer) return "Command not recognised";
+          return showMyAccounts(customer);
+        case "NEWACCOUNT":
+          if (!isCustomer) return "Command not recognised";
+          return handleNewAccount(customer, args);
+        case "MOVE":
+          if (!isCustomer) return "Command not recognised";
+          return moveMoney(customer, args);
+        case "PAY":
+          if (!isCustomer) return "Command not recognised";
+          return payMoney(customer, args);
+        case "DEACTIVATE":
+          if(!isCustomer) return "Command not recognised";
+          return deactivateAccount(customer, args);
+        case "TESTADDMONEY":
         if (!isEmployee) return "Command not recognised";
-        return viewAllCustomers();
-      case "SHOWMYACCOUNTS":
-        if (!isCustomer) return "Command not recognised";
-        return showMyAccounts(customer);
-      case "NEWACCOUNT":
-        if (!isCustomer) return "Command not recognised";
-        return handleNewAccount(customer, args);
-      case "MOVE":
-        if (!isCustomer) return "Command not recognised";
-        return moveMoney(customer, args);
-      case "PAY":
-        if (!isCustomer) return "Command not recognised";
-        return payMoney(customer, args);
-      case "DEACTIVATE":
-        if (!isCustomer) return "Command not recognised";
-        return deactivateAccount(customer, args);
-      case "TESTADDMONEY":
-        if (!isEmployee) return "Command not recognised";
-        return testAddMoney(args);
-      default:
-        return "Command not recognised";
-    }
+        return testAddMoney(args);  
+        default:
+          return "Command not recognised";
+      }
   }
 
+  
   private String viewAllCustomers() {
     StringBuilder result = new StringBuilder();
     for (String customerName : customers.keySet()) {
@@ -151,6 +162,29 @@ public class NewBank {
     return result.toString();
   }
 
+  // Admin use VIEWTRANSACTION command method
+  private String viewAllTransactions() {
+    StringBuilder result = new StringBuilder();
+    HashMap<String, List<Transaction>> all = transactionLedger.getAllTransactions();
+    if (all.isEmpty()) {
+        return "No transactions recorded";
+    }
+    for (String accountName : all.keySet()) {
+        result.append(accountName).append(":|");
+        for (Transaction tx : all.get(accountName)) {
+            result.append(tx.getDate())
+              .append(" - ")
+              .append(tx.getReference())
+              .append(" £")
+              .append(String.format("%.2f", tx.getValue()))
+              .append("|");
+        }
+        result.append("|");
+    }
+    return result.toString();
+  }
+
+  //
   private String showMyAccounts(CustomerID customer) {
     return customers.get(customer.getKey()).accountsToString();
   }
@@ -180,9 +214,39 @@ public class NewBank {
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.moveMoney();
+    String result = transactionManager.moveMoney();
+
+    if (result.startsWith("SUCCESS")) {
+
+    String from = transactionManager.getFromAccountName();
+    String to = transactionManager.getToAccountName();
+    float value = transactionManager.getValue();
+
+    // Debit (from account)
+    Transaction txOut = new Transaction(
+      "MOVE OUT",
+      -value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    // Credit (to account)
+    Transaction txIn = new Transaction(
+      "MOVE IN",
+      value,
+      new java.sql.Date(System.currentTimeMillis())
+    );
+
+    String fromKey = customerID.getKey() + ":" + from;
+    String toKey = customerID.getKey() + ":" + to;
+
+    transactionLedger.record(fromKey, txOut);
+    transactionLedger.record(toKey, txIn);
   }
 
+  return result;
+}
+
+  ////
   public String payMoney(CustomerID customerID, String args) {
     Customer customer = customers.get(customerID.getKey());
 
@@ -192,7 +256,38 @@ public class NewBank {
     } catch (Exception e) {
       return e.getMessage();
     }
-    return transactionManager.payMoney();
+    String result = transactionManager.payMoney();
+
+    if (result.startsWith("SUCCESS")) {
+      float value = transactionManager.getValue();
+        String fromAccount = transactionManager.getFromAccountName();
+
+      // Sender (OUT)
+      Transaction txOut = new Transaction(
+        "PAY to " + args.split(" ")[1],
+        -value,
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      String fromKey = customerID.getKey() + ":" + fromAccount;
+      transactionLedger.record(fromKey, txOut);
+
+      // Receiver (IN)
+      String payee = args.split(" ")[1];
+
+      Customer recipient = customers.get(payee);
+      String toAccount = recipient.getFirstAccount().getName();
+
+      Transaction txIn = new Transaction(
+        "PAY from " + customerID.getKey(),
+        value,
+        new java.sql.Date(System.currentTimeMillis())
+      );
+
+      String toKey = payee + ":" + toAccount;
+      transactionLedger.record(toKey, txIn);
+    }
+    return result;
   }
 
   public String testAddMoney(String args) {
@@ -234,8 +329,20 @@ public class NewBank {
       return e.getMessage();
     }
 
-    return transactionManager.addMoney();
+    String result = transactionManager.addMoney();
+      if (result.startsWith("SUCCESS")) {
+        Transaction tx = new Transaction(
+          "ADDMONEY " + source,
+          amount,
+          new java.sql.Date(System.currentTimeMillis())
+        );
+      String key = customerID.getKey() + ":" + accountName;
+      transactionLedger.record(key, tx);
+    }
+    return result;
   }
+
+
 
   private String deactivateAccount(CustomerID customerID, String args) {
     if (args == null || args.isEmpty()) {

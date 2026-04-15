@@ -1,29 +1,91 @@
-This document details the protocol for interacting with the NewBank server.  
+This document details the protocol for interacting with the NewBank server.
 
-A customer enters the command below and sees the messages returned 
+Interaction is via client terminal window. 
+Login/logout activity is also displayed on the server terminal window.
+
+
+New users may join NewBank by entering YES at the client startup user interface display
+
+e.g.
+Welcome to NewBank
+Are you a new user? Type "YES" or press Enter: YES
+
+We'll create you an account, please enter the new username and password
+Enter Username TanjiTheCat
+Enter Password salmontuna1234
+
+Login Successful
+
+A new customer account has now been created.
+
+
+
+
+A customer enters the command below and sees the messages returned: 
+
+CHANGEPW <new password>
+e.g. CHANGEPW 1234newpassword!4321
+Returns SUCCESS: Password changed
 
 SHOWMYACCOUNTS
 Returns a list of all the customers accounts along with their current balance 
-e.g. Main: 1000.0 
+e.g. 
+Current: 250.0
+Saving: 900.0
 
 NEWACCOUNT <Name>
 e.g. NEWACCOUNT Savings
-Returns SUCCESS or FAIL
+Returns "SUCCESS - a new account 'Savings' has been created. Minimum opening deposit of £1 required before activation."
 
 MOVE <Amount> <From> <To>
-e.g. MOVE 100 Main Savings 
-Returns SUCCESS or FAIL
+e.g. MOVE 10 Main Saving 
+Returns SUCCESS: £10.00 transferred from Checking to Saving
 
-PAY <Person/Company> <Ammount>
-e.g. PAY John 100
-Returns SUCCESS or FAIL
+PAY <From account> <Payee name> <Amount>
+e.g. PAY Main John 100
+Returns SUCCESS - you sent John 100
+or 
+FAIL - Insufficient balance
 
 LOGOUT
 e.g. LOGOUT
-Returns "User Logout: John" and "LOGGED OUT"
+Returns "LOGGED OUT" and "User Logout: John" in bank server terminal 
 
 EXIT
 e.g. EXIT
-Returns "Thanks for using NewBank" "User Logout: John"
+Returns "Thanks for using NewBank" and "User Logout: John" in bank server terminal 
 
-#TODO: Ability to EXIT after LOGOUT without logging back in?
+
+
+
+Bank admin login can be tested using:
+Username Admin
+Password admin
+
+An admin login can enter a command from the list below and sees the message returned:
+
+CHANGEPW <new password>
+e.g. CHANGEPW 1234newpassword!4321
+Returns SUCCESS: Password changed
+
+VIEWALL
+e.g. VIEWALL
+Returns a list of all customers and their accounts held in database
+
+VIEWTRANSACTIONS
+e.g. VIEWTRANSACTIONS
+Returns a list of all transactions for active bank server session
+
+TESTADDMONEY <toUsername> <toAccount> <amount> <source>
+e.g. TESTADDMONEY John Main 500 DevTeamGift
+Returns "SUCCESS - 500.00 added to Main"
+
+LOGOUT
+e.g. LOGOUT
+Returns "LOGGED OUT" and "User Logout: John" in bank server terminal 
+
+EXIT
+e.g. EXIT
+Returns "Thanks for using NewBank" and "User Logout: John" in bank server terminal 
+
+
