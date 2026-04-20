@@ -40,8 +40,9 @@ Build Tool: Maven
 src/main/java/newbank/server/: Core banking logic, ExecutorService implementation, and DatabaseHandler.
 
 src/main/java/newbank/client/: User interface and socket communication logic.
-Please see : https://trello.com/b/JVe1Ppa8/uobgroup03newbank
 
 .github/workflows/: CI/CD pipeline configurations.
 
 Note: The nginx.conf file is currently not included in this repository to allow for environment-specific configurations (e.g., SSL certificate paths, specific port mapping). However, the backend is fully optimized to operate behind a reverse proxy. If the team requires a standardized Nginx template for deployment, I can provide a pre-configured version upon request
+
+Please see : https://trello.com/b/JVe1Ppa8/uobgroup03newbank
