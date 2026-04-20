@@ -40,6 +40,7 @@ Build Tool: Maven
 src/main/java/newbank/server/: Core banking logic, ExecutorService implementation, and DatabaseHandler.
 
 src/main/java/newbank/client/: User interface and socket communication logic.
+Please see : https://trello.com/b/JVe1Ppa8/uobgroup03newbank
 
 .github/workflows/: CI/CD pipeline configurations.
 
